@@ -1,6 +1,6 @@
 # ESP32 ESP-IDF and ESP8266 RTOS SDK component for vector (dynamic array)
 
-The size of vector is limited by size of free memory. Support of any data types.
+The size of vector is limited by 255 items. Support of any data types.
 
 ## Using
 

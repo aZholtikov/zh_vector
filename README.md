@@ -17,7 +17,7 @@ In the application, add the component:
 #include "zh_vector.h"
 ```
 
-## Examples
+## Example
 
 Create, add, read, modify and delete items:
 

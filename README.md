@@ -4,7 +4,7 @@ The size of vector is limited by 255 items. Support of any data types.
 
 ## Using
 
-In an existing project, run the following command to install the components:
+In an existing project, run the following command to install the component:
 
 ```text
 cd ../your_project/components

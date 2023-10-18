@@ -71,6 +71,9 @@ extern "C"
     /**
      * @brief      Get item by index.
      *
+     * @param[in]  vector  Pointer to structure of vector.
+     * @param[in]  index   Index of item for get.
+     *
      * @return
      *              - Pointer to item
      *              - NULL if index does not exist

@@ -11,8 +11,8 @@ extern "C"
     typedef struct zh_vector_t
     {
         void **items;
-        uint8_t capacity;
-        uint8_t size;
+        uint16_t capacity;
+        uint16_t size;
     } zh_vector_t;
 
     /**

@@ -16,7 +16,7 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
     return ESP_OK;
 }
 
-uint8_t zh_vector_get_size(zh_vector_t *vector)
+uint16_t zh_vector_get_size(zh_vector_t *vector)
 {
     return vector->size;
 }

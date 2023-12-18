@@ -43,7 +43,7 @@ extern "C"
      * @return
      *              - Vector size
      */
-    uint8_t zh_vector_get_size(zh_vector_t *vector);
+    uint16_t zh_vector_get_size(zh_vector_t *vector);
 
     /**
      * @brief      Add item at end of vector. If sufficient memory is not available then it will resize the memory.

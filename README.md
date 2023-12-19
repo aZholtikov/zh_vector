@@ -36,19 +36,19 @@ void app_main(void)
     zh_vector_push_back(&vector, "Item 4");
     zh_vector_push_back(&vector, "Item 5");
     printf("Add 5 items. New vector size is: %d\n", zh_vector_get_size(&vector));
-    for (uint8_t i = 0; i < zh_vector_get_size(&vector); ++i)
+    for (uint16_t i = 0; i < zh_vector_get_size(&vector); ++i)
     {
         printf("Item position %d is: %s\n", i, (char *)zh_vector_get_item(&vector, i));
     }
     zh_vector_change_item(&vector, 3, "Item 6");
     printf("Change item on 3 position.\n");
-    for (uint8_t i = 0; i < zh_vector_get_size(&vector); ++i)
+    for (uint16_t i = 0; i < zh_vector_get_size(&vector); ++i)
     {
         printf("Item position %d is: %s\n", i, (char *)zh_vector_get_item(&vector, i));
     }
     zh_vector_delete_item(&vector, 2);
     printf("Delete item on 2 position. New vector size is: %d\n", zh_vector_get_size(&vector));
-    for (uint8_t i = 0; i < zh_vector_get_size(&vector); ++i)
+    for (uint16_t i = 0; i < zh_vector_get_size(&vector); ++i)
     {
         printf("Item position %d is: %s\n", i, (char *)zh_vector_get_item(&vector, i));
     }

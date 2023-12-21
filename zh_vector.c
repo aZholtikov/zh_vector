@@ -1,6 +1,6 @@
 #include "zh_vector.h"
 
-static void s_zh_vector_resize(zh_vector_t *vector, uint8_t capacity);
+static void s_zh_vector_resize(zh_vector_t *vector, uint16_t capacity);
 
 esp_err_t zh_vector_init(zh_vector_t *vector)
 {
@@ -21,7 +21,7 @@ uint16_t zh_vector_get_size(zh_vector_t *vector)
     return vector->size;
 }
 
-static void s_zh_vector_resize(zh_vector_t *vector, uint8_t capacity)
+static void s_zh_vector_resize(zh_vector_t *vector, uint16_t capacity)
 {
     void **items = realloc(vector->items, sizeof(void *) * capacity);
     vector->items = items;
@@ -38,7 +38,7 @@ esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item)
     return ESP_OK;
 }
 
-esp_err_t zh_vector_change_item(zh_vector_t *vector, uint8_t index, void *item)
+esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item)
 {
     if (index < vector->size)
     {
@@ -48,7 +48,7 @@ esp_err_t zh_vector_change_item(zh_vector_t *vector, uint8_t index, void *item)
     return ESP_FAIL;
 }
 
-void *zh_vector_get_item(zh_vector_t *vector, uint8_t index)
+void *zh_vector_get_item(zh_vector_t *vector, uint16_t index)
 {
     void *item = NULL;
     if (index < vector->size)
@@ -58,7 +58,7 @@ void *zh_vector_get_item(zh_vector_t *vector, uint8_t index)
     return item;
 }
 
-esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint8_t index)
+esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index)
 {
     if (index >= vector->size)
     {

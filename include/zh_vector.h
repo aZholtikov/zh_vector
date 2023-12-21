@@ -67,7 +67,7 @@ extern "C"
      *              - ESP_OK if change success
      *              - ESP_FAIL if index does not exist
      */
-    esp_err_t zh_vector_change_item(zh_vector_t *vector, uint8_t index, void *item);
+    esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item);
 
     /**
      * @brief      Get item by index.
@@ -79,7 +79,7 @@ extern "C"
      *              - Pointer to item
      *              - NULL if index does not exist
      */
-    void *zh_vector_get_item(zh_vector_t *vector, uint8_t index);
+    void *zh_vector_get_item(zh_vector_t *vector, uint16_t index);
 
     /**
      * @brief      Delete item by index and shifts all elements in vector.
@@ -91,7 +91,7 @@ extern "C"
      *              - ESP_OK if delete success
      *              - ESP_FAIL if index does not exist
      */
-    esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint8_t index);
+    esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index);
 
 #ifdef __cplusplus
 }

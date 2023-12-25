@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdio.h"
+#include "stdlib.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus

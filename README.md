@@ -22,7 +22,6 @@ In the application, add the component:
 Create, add, read, modify and delete items:
 
 ```c
-#include "stdio.h"
 #include "zh_vector.h"
 
 void app_main(void)

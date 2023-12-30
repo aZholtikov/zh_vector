@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdlib.h"
+#include "string.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus
@@ -13,17 +13,19 @@ extern "C"
         void **items;
         uint16_t capacity;
         uint16_t size;
+        uint16_t unit;
     } zh_vector_t;
 
     /**
      * @brief      Initialize vector.
      *
      * @param[in]  vector  Pointer to structure of vector.
+     * @param[in]  unit    Size of vector unit.
      *
      * @return
      *              - ESP_OK always
      */
-    esp_err_t zh_vector_init(zh_vector_t *vector);
+    esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit);
 
     /**
      * @brief      Deinitialize vector. Free all allocated memory.

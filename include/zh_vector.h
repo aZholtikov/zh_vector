@@ -1,5 +1,6 @@
 #pragma once
 
+#include "stdlib.h"
 #include "string.h"
 #include "esp_err.h"
 

@@ -63,3 +63,5 @@ void app_main(void)
     zh_vector_free(&vector);
 }
 ```
+
+Any [feedback](mailto:github@azholtikov.ru) will be gladly accepted.

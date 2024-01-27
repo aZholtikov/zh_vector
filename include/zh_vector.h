@@ -15,7 +15,7 @@ extern "C"
         uint16_t capacity;
         uint16_t size;
         uint16_t unit;
-    } zh_vector_t;
+    } __attribute__((packed)) zh_vector_t;
 
     /**
      * @brief      Initialize vector.

@@ -1,6 +1,9 @@
 # ESP32 ESP-IDF and ESP8266 RTOS SDK component for vector (dynamic array)
 
-Support of any data types.
+## Tested on
+
+1. ESP8266 RTOS_SDK v3.4
+2. ESP32 ESP-IDF v5.1.0
 
 ## Using
 

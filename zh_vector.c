@@ -4,6 +4,10 @@ static void s_zh_vector_resize(zh_vector_t *vector, uint16_t capacity);
 
 esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit)
 {
+    if (vector == NULL || unit == 0)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     vector->capacity = 0;
     vector->size = 0;
     vector->unit = unit;
@@ -13,6 +17,10 @@ esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit)
 
 esp_err_t zh_vector_free(zh_vector_t *vector)
 {
+    if (vector == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     for (uint16_t i = 0; i < zh_vector_get_size(vector); ++i)
     {
         free(zh_vector_get_item(vector, i));
@@ -23,6 +31,10 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
 
 uint16_t zh_vector_get_size(zh_vector_t *vector)
 {
+    if (vector == NULL)
+    {
+        return 0;
+    }
     return vector->size;
 }
 
@@ -35,6 +47,10 @@ static void s_zh_vector_resize(zh_vector_t *vector, uint16_t capacity)
 
 esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item)
 {
+    if (vector == NULL || item == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     if (vector->capacity == vector->size)
     {
         s_zh_vector_resize(vector, vector->capacity + 1);
@@ -47,6 +63,10 @@ esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item)
 
 esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item)
 {
+    if (vector == NULL || item == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     if (index < vector->size)
     {
         void *temp = zh_vector_get_item(vector, index);
@@ -58,6 +78,10 @@ esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item)
 
 void *zh_vector_get_item(zh_vector_t *vector, uint16_t index)
 {
+    if (vector == NULL)
+    {
+        return NULL;
+    }
     void *item = NULL;
     if (index < vector->size)
     {
@@ -68,6 +92,10 @@ void *zh_vector_get_item(zh_vector_t *vector, uint16_t index)
 
 esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index)
 {
+    if (vector == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     if (index >= vector->size)
     {
         return ESP_FAIL;

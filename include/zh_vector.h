@@ -24,7 +24,8 @@ extern "C"
      * @param[in]  unit    Size of vector unit.
      *
      * @return
-     *              - ESP_OK always
+     *              - ESP_OK if initialization was success
+     *              - ESP_ERR_INVALID_ARG if parameter error
      */
     esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit);
 
@@ -34,7 +35,8 @@ extern "C"
      * @param[in]  vector  Pointer to structure of vector.
      *
      * @return
-     *              - ESP_OK always
+     *              - ESP_OK if deinitialization was success
+     *              - ESP_ERR_INVALID_ARG if parameter error
      */
     esp_err_t zh_vector_free(zh_vector_t *vector);
 
@@ -45,6 +47,7 @@ extern "C"
      *
      * @return
      *              - Vector size
+     *              - 0 if parameter error
      */
     uint16_t zh_vector_get_size(zh_vector_t *vector);
 
@@ -55,7 +58,8 @@ extern "C"
      * @param[in]  item    Pointer to item for add.
      *
      * @return
-     *              - ESP_OK always
+     *              - ESP_OK if add was success
+     *              - ESP_ERR_INVALID_ARG if parameter error
      */
     esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item);
 
@@ -67,7 +71,8 @@ extern "C"
      * @param[in]  item    Pointer to new data of item.
      *
      * @return
-     *              - ESP_OK if change success
+     *              - ESP_OK if change was success
+     *              - ESP_ERR_INVALID_ARG if parameter error
      *              - ESP_FAIL if index does not exist
      */
     esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item);
@@ -80,7 +85,7 @@ extern "C"
      *
      * @return
      *              - Pointer to item
-     *              - NULL if index does not exist
+     *              - NULL if parameter error or if index does not exist
      */
     void *zh_vector_get_item(zh_vector_t *vector, uint16_t index);
 
@@ -91,7 +96,8 @@ extern "C"
      * @param[in]  index   Index of item for delete.
      *
      * @return
-     *              - ESP_OK if delete success
+     *              - ESP_OK if delete was success
+     *              - ESP_ERR_INVALID_ARG if parameter error
      *              - ESP_FAIL if index does not exist
      */
     esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index);

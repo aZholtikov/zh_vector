@@ -1,9 +1,3 @@
-/**
- * @file
- * The main code of the zh_vector component.
- *
- */
-
 #include "zh_vector.h"
 
 static const char *TAG = "zh_vector";

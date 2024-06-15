@@ -1,9 +1,3 @@
-/**
- * @file
- * Header file for the zh_vector component.
- *
- */
-
 #pragma once
 
 #include "stdlib.h"
@@ -23,12 +17,12 @@ extern "C"
      */
     typedef struct
     {
-        void **items;      ///< Array of pointers of vector items. @note
-        uint16_t capacity; ///< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted.
-        uint16_t size;     ///< Number of items in the vector. @note Can be read with zh_vector_get_size().
-        uint16_t unit;     ///< Vector item size. @note Possible values from 1 to 65536.
-        bool status;       ///< Vector initialization status flag. @note Used to prevent execution of vector functions without prior vector initialization.
-        bool spi_ram;      ///< SPI RAM using status flag. @note True - vector will be placed in SPI RAM, false - vector will be placed in RAM.
+        void **items;      // Array of pointers of vector items.
+        uint16_t capacity; // Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted.
+        uint16_t size;     // Number of items in the vector. @note Can be read with zh_vector_get_size().
+        uint16_t unit;     // Vector item size. @note Possible values from 1 to 65536.
+        bool status;       // Vector initialization status flag. @note Used to prevent execution of vector functions without prior vector initialization.
+        bool spi_ram;      // SPI RAM using status flag. @note True - vector will be placed in SPI RAM, false - vector will be placed in RAM.
     } zh_vector_t;
 
     /**

@@ -16,8 +16,6 @@
 1. Do not enable SPI RAM support unless you are sure that SPI RAM is present in your ESP32 module and it is properly configured via menuconfig.
 2. If SPI RAM is present via menuconfig select Component Config -> ESP PSRAM -> Support for external, SPI-connected RAM and select SPI RAM config -> SPI RAM access method -> Make RAM allocatable using heap_caps_malloc(…, MALLOC_CAP_SPIRAM).
 
-## [Function description](http://zh-vector.zh.com.ru)
-
 ## Using
 
 In an existing project, run the following command to install the component:

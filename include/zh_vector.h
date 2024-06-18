@@ -11,11 +11,7 @@ extern "C"
 {
 #endif
 
-    /**
-     * @brief Main structure of vector data.
-     *
-     */
-    typedef struct
+    typedef struct // Main structure of vector data.
     {
         void **items;      // Array of pointers of vector items.
         uint16_t capacity; // Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted.

@@ -38,7 +38,7 @@ char example[10] = {0};
 
 void app_main(void)
 {
-    esp_log_level_set("zh_vector", ESP_LOG_NONE);
+    esp_log_level_set("zh_vector", ESP_LOG_NONE); // For ESP8266 first enable "Component config -> Log output -> Enable log set level" via menuconfig.
     zh_vector_init(&vector, sizeof(example));
     printf("Initial vector size is: %d\n", zh_vector_get_size(&vector));
     strcpy(example, "Item 1");

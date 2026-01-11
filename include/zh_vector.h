@@ -1,3 +1,7 @@
+/**
+ * @file zh_vector.h
+ */
+
 #pragma once
 
 #include "string.h"
@@ -10,13 +14,16 @@ extern "C"
 {
 #endif
 
-    typedef struct // Main structure of vector data.
+    /**
+     * @brief Main structure of vector data.
+     */
+    typedef struct
     {
-        void **items;      // Array of pointers of vector items.
-        uint16_t capacity; // Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted.
-        uint16_t size;     // Number of items in the vector. @note Can be read with zh_vector_get_size().
-        uint16_t unit;     // Vector item size. @note Possible values from 1 to 65535.
-        bool status;       // Vector initialization status flag. @note Used to prevent execution of vector functions without prior vector initialization.
+        void **items;      /*!< Array of pointers of vector items. */
+        uint16_t capacity; /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
+        uint16_t size;     /*!< Number of items in the vector. */
+        uint16_t unit;     /*!< Vector item size. */
+        bool status;       /*!< Vector initialization status flag. @note Used to prevent execution of vector functions without prior vector initialization. */
     } zh_vector_t;
 
     /**
@@ -25,10 +32,7 @@ extern "C"
      * @param[in] vector Pointer to main structure of vector data.
      * @param[in] unit Size of vector item.
      *
-     * @return
-     *              - ESP_OK if initialization was success
-     *              - ESP_ERR_INVALID_ARG if parameter error
-     *              - ESP_ERR_INVALID_STATE if vector already initialized
+     * @return ESP_OK if success or an error code otherwise.
      */
     esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit);
 
@@ -37,10 +41,7 @@ extern "C"
      *
      * @param[in] vector Pointer to main structure of vector data.
      *
-     * @return
-     *              - ESP_OK if deinitialization was success
-     *              - ESP_ERR_INVALID_ARG if parameter error
-     *              - ESP_ERR_INVALID_STATE if vector not initialized
+     * @return ESP_OK if success or an error code otherwise.
      */
     esp_err_t zh_vector_free(zh_vector_t *vector);
 
@@ -49,9 +50,7 @@ extern "C"
      *
      * @param[in] vector Pointer to main structure of vector data.
      *
-     * @return
-     *              - Vector size
-     *              - ESP_FAIL if parameter error or vector not initialized
+     * @return Vector size if success or ESP_FAIL otherwise.
      */
     esp_err_t zh_vector_get_size(zh_vector_t *vector);
 
@@ -61,11 +60,7 @@ extern "C"
      * @param[in] vector Pointer to main structure of vector data.
      * @param[in] item Pointer to item for add.
      *
-     * @return
-     *              - ESP_OK if add was success
-     *              - ESP_ERR_INVALID_ARG if parameter error
-     *              - ESP_ERR_NO_MEM if memory allocation fail or no free memory in the heap
-     *              - ESP_ERR_INVALID_STATE if vector not initialized
+     * @return ESP_OK if success or an error code otherwise.
      */
     esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item);
 
@@ -76,11 +71,7 @@ extern "C"
      * @param[in] index Index of item for change.
      * @param[in] item Pointer to new data of item.
      *
-     * @return
-     *              - ESP_OK if change was success
-     *              - ESP_ERR_INVALID_ARG if parameter error
-     *              - ESP_ERR_INVALID_STATE if vector not initialized
-     *              - ESP_FAIL if index does not exist
+     * @return ESP_OK if success or an error code otherwise.
      */
     esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item);
 
@@ -90,9 +81,7 @@ extern "C"
      * @param[in] vector Pointer to main structure of vector data.
      * @param[in] index Index of item for get.
      *
-     * @return
-     *              - Pointer to item
-     *              - NULL if parameter error or vector not initialized or if index does not exist
+     * @return Pointer to item or NULL otherwise.
      */
     void *zh_vector_get_item(zh_vector_t *vector, uint16_t index);
 
@@ -102,11 +91,7 @@ extern "C"
      * @param[in] vector Pointer to main structure of vector data.
      * @param[in] index Index of item for delete.
      *
-     * @return
-     *              - ESP_OK if delete was success
-     *              - ESP_ERR_INVALID_ARG if parameter error
-     *              - ESP_ERR_INVALID_STATE if vector not initialized
-     *              - ESP_FAIL if index does not exist
+     * @return ESP_OK if success or an error code otherwise.
      */
     esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index);
 

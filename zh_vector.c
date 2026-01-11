@@ -19,11 +19,11 @@ esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit)
 {
     ZH_LOGI("Vector initialization begin.");
     ZH_ERROR_CHECK(vector != NULL && unit != 0, ESP_ERR_INVALID_ARG, NULL, "Vector initialization failed. Invalid argument.");
-    ZH_ERROR_CHECK(vector->status == false, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failedd. Vector is already initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == false, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failedd. Vector is already initialized.");
     vector->capacity = 0;
     vector->size = 0;
     vector->unit = unit;
-    vector->status = true;
+    vector->is_initialized = true;
     ZH_LOGI("Vector initialization success.");
     return ESP_OK;
 }
@@ -32,12 +32,12 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
 {
     ZH_LOGI("Vector deletion begin.");
     ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Vector deletion failed. Invalid argument.");
-    ZH_ERROR_CHECK(vector->status == true, ESP_ERR_INVALID_STATE, NULL, "Vector deletion fail. Vector not initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Vector deletion fail. Vector not initialized.");
     for (uint16_t i = 0; i < vector->size; ++i)
     {
         heap_caps_free(vector->items[i]);
     }
-    vector->status = false;
+    vector->is_initialized = false;
     ZH_LOGI("Vector deletion success.");
     return ESP_OK;
 }
@@ -46,7 +46,7 @@ esp_err_t zh_vector_get_size(zh_vector_t *vector)
 {
     ZH_LOGI("Getting vector size begin.");
     ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Getting vector size fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->status == true, ESP_ERR_INVALID_STATE, NULL, "Getting vector size fail. Vector not initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Getting vector size fail. Vector not initialized.");
     ZH_LOGI("Getting vector size success.");
     return vector->size;
 }
@@ -55,7 +55,7 @@ esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item) // -V2008
 {
     ZH_LOGI("Adding item to vector begin.");
     ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->status == true, ESP_ERR_INVALID_STATE, NULL, "Adding item to vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Adding item to vector fail. Vector not initialized.");
     if (vector->capacity == vector->size)
     {
         esp_err_t err = _resize(vector, vector->capacity + 1);
@@ -72,7 +72,7 @@ esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item)
 {
     ZH_LOGI("Changing item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Changing item in vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->status == true, ESP_ERR_INVALID_STATE, NULL, "Changing item in vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Changing item in vector fail. Vector not initialized.");
     ZH_ERROR_CHECK(index < vector->size, ESP_FAIL, NULL, "Changing item in vector fail. Index does not exist.");
     memcpy(vector->items[index], item, vector->unit);
     ZH_LOGI("Changing item in vector success.");
@@ -87,7 +87,7 @@ void *zh_vector_get_item(zh_vector_t *vector, uint16_t index)
         ZH_LOGE("Getting item from vector fail. Invalid argument.", ESP_ERR_INVALID_ARG);
         return NULL;
     }
-    if (vector->status == false)
+    if (vector->is_initialized == false)
     {
         ZH_LOGE("Getting item from vector fail. Vector not initialized.", ESP_ERR_INVALID_STATE);
         return NULL;
@@ -108,7 +108,7 @@ esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index)
 {
     ZH_LOGI("Deleting item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->status == true, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector fail. Vector not initialized.");
     ZH_ERROR_CHECK(index < vector->size, ESP_FAIL, NULL, "Deleting item in vector fail. Index does not exist.");
     heap_caps_free(vector->items[index]);
     for (uint8_t i = index; i < (vector->size - 1); ++i)

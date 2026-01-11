@@ -19,11 +19,11 @@ extern "C"
      */
     typedef struct
     {
-        void **items;      /*!< Array of pointers of vector items. */
-        uint16_t capacity; /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
-        uint16_t size;     /*!< Number of items in the vector. */
-        uint16_t unit;     /*!< Vector item size. */
-        bool status;       /*!< Vector initialization status flag. @note Used to prevent execution of vector functions without prior vector initialization. */
+        void **items;        /*!< Array of pointers of vector items. */
+        uint16_t capacity;   /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
+        uint16_t size;       /*!< Number of items in the vector. */
+        uint16_t unit;       /*!< Vector item size. */
+        bool is_initialized; /*!< Vector initialization status flag. */
     } zh_vector_t;
 
     /**

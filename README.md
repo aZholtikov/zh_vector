@@ -1,9 +1,12 @@
-# ESP32 ESP-IDF and ESP8266 RTOS SDK component for vector (dynamic array)
+# ESP32 ESP-IDF component for vector (dynamic array)
 
 ## Tested on
 
-1. [ESP8266 RTOS_SDK v3.4](https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/index.html#)
-2. [ESP32 ESP-IDF v5.4](https://docs.espressif.com/projects/esp-idf/en/release-v5.4/esp32/index.html)
+1. [ESP32 ESP-IDF v5.5.1](https://docs.espressif.com/projects/esp-idf/en/v5.5.1/esp32/index.html)
+
+## SAST Tools
+
+[PVS-Studio](https://pvs-studio.com/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
 
 ## Features
 
@@ -16,7 +19,7 @@ In an existing project, run the following command to install the component:
 
 ```text
 cd ../your_project/components
-git clone http://git.zh.com.ru/alexey.zholtikov/zh_vector
+git clone http://git.zh.com.ru/esp_components/zh_vector
 ```
 
 In the application, add the component:
@@ -38,7 +41,7 @@ char example[10] = {0};
 
 void app_main(void)
 {
-    esp_log_level_set("zh_vector", ESP_LOG_NONE); // For ESP8266 first enable "Component config -> Log output -> Enable log set level" via menuconfig.
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
     zh_vector_init(&vector, sizeof(example));
     printf("Initial vector size is: %d\n", zh_vector_get_size(&vector));
     strcpy(example, "Item 1");

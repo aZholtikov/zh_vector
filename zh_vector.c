@@ -51,7 +51,7 @@ esp_err_t zh_vector_get_size(zh_vector_t *vector)
     return vector->size;
 }
 
-esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item)
+esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item) // -V2008
 {
     ZH_LOGI("Adding item to vector begin.");
     ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to vector fail. Invalid argument.");

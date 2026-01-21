@@ -45,8 +45,8 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
 esp_err_t zh_vector_get_size(zh_vector_t *vector)
 {
     ZH_LOGI("Getting vector size begin.");
-    ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Getting vector size fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Getting vector size fail. Vector not initialized.");
+    ZH_ERROR_CHECK(vector != NULL, ESP_FAIL, NULL, "Getting vector size fail. Invalid argument.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_FAIL, NULL, "Getting vector size fail. Vector not initialized.");
     ZH_LOGI("Getting vector size success.");
     return vector->size;
 }

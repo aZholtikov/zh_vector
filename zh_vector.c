@@ -37,6 +37,7 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
     {
         heap_caps_free(vector->items[i]);
     }
+    heap_caps_free(vector->items);
     vector->is_initialized = false;
     ZH_LOGI("Vector deletion success.");
     return ESP_OK;

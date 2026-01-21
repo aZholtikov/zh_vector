@@ -19,7 +19,7 @@ esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit)
 {
     ZH_LOGI("Vector initialization begin.");
     ZH_ERROR_CHECK(vector != NULL && unit != 0, ESP_ERR_INVALID_ARG, NULL, "Vector initialization failed. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == false, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failedd. Vector is already initialized.");
+    ZH_ERROR_CHECK(vector->is_initialized == false, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failed. Vector is already initialized.");
     vector->capacity = 0;
     vector->size = 0;
     vector->unit = unit;

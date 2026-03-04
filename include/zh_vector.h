@@ -34,7 +34,7 @@ extern "C"
      *
      * @return ESP_OK if success or an error code otherwise.
      */
-    esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit);
+    esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit, ...);
 
     /**
      * @brief Deinitialize vector. Free all allocated memory.

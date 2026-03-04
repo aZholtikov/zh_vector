@@ -2,7 +2,7 @@
 
 ## Tested on
 
-1. [ESP32 ESP-IDF v5.5.1](https://docs.espressif.com/projects/esp-idf/en/v5.5.1/esp32/index.html)
+1. [ESP32 ESP-IDF v5.5.3](https://docs.espressif.com/projects/esp-idf/en/v5.5.3/esp32/index.html)
 
 ## SAST Tools
 
@@ -19,7 +19,7 @@ In an existing project, run the following command to install the component:
 
 ```text
 cd ../your_project/components
-git clone http://git.zh.com.ru/esp_components/zh_vector
+git clone https://github.com/aZholtikov/zh_vector
 ```
 
 In the application, add the component:

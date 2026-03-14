@@ -118,7 +118,8 @@ esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index)
         vector->items[i + 1] = NULL;
     }
     --vector->size;
-    _resize(vector, vector->capacity - 1);
+    esp_err_t err = _resize(vector, vector->capacity - 1);
+    ZH_ERROR_CHECK(err == ESP_OK, err, NULL, "Deleting item in vector fail. Memory allocation fail or no free memory in the heap.");
     ZH_LOGI("Deleting item in vector success.");
     return ESP_OK;
 }

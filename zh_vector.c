@@ -105,7 +105,7 @@ void *zh_vector_get_item(zh_vector_t *vector, uint16_t index)
     }
 }
 
-esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index)
+esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index) // -V2008
 {
     ZH_LOGI("Deleting item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector fail. Invalid argument.");

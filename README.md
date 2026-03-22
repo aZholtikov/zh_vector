@@ -2,7 +2,7 @@
 
 ## Tested on
 
-1. [ESP32 ESP-IDF v5.5.3](https://docs.espressif.com/projects/esp-idf/en/v5.5.3/esp32/index.html)
+1. [ESP32 ESP-IDF v6.0.0](https://docs.espressif.com/projects/esp-idf/en/v6.0/esp32/index.html)
 
 ## SAST Tools
 

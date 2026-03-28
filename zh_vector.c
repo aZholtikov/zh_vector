@@ -59,8 +59,7 @@ esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item) // -V2008
     ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Adding item to vector fail. Vector not initialized.");
     if (vector->capacity == vector->size)
     {
-        esp_err_t err = _resize(vector, vector->capacity + 1);
-        ZH_ERROR_CHECK(err == ESP_OK, err, NULL, "Adding item to vector fail. Memory allocation fail or no free memory in the heap.");
+        ZH_ERROR_CHECK(_resize(vector, vector->capacity + 1) == ESP_OK, ESP_ERR_NO_MEM, NULL, "Adding item to vector fail. Memory allocation fail or no free memory in the heap.");
     }
     vector->items[vector->size] = heap_caps_calloc(1, vector->unit, MALLOC_CAP_8BIT);
     ZH_ERROR_CHECK(vector->items[vector->size] != NULL, ESP_ERR_NO_MEM, NULL, "Adding item to vector fail. Memory allocation fail or no free memory in the heap.");
@@ -118,8 +117,7 @@ esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index) // -V2008
         vector->items[i + 1] = NULL;
     }
     --vector->size;
-    esp_err_t err = _resize(vector, vector->capacity - 1);
-    ZH_ERROR_CHECK(err == ESP_OK, err, NULL, "Deleting item in vector fail. Memory allocation fail or no free memory in the heap.");
+    ZH_ERROR_CHECK(_resize(vector, vector->capacity - 1) == ESP_OK, ESP_ERR_NO_MEM, NULL, "Deleting item in vector fail. Memory allocation fail or no free memory in the heap.");
     ZH_LOGI("Deleting item in vector success.");
     return ESP_OK;
 }

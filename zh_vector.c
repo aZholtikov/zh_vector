@@ -24,6 +24,7 @@ esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit, ...)
     vector->size = 0;
     vector->unit = unit;
     vector->is_initialized = true;
+    vector->items = heap_caps_calloc(1, sizeof(vector->items), MALLOC_CAP_8BIT);
     ZH_LOGI("Vector initialization success.");
     return ESP_OK;
 }

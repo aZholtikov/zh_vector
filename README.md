@@ -1,5 +1,9 @@
 # ESP32 ESP-IDF component for vector (dynamic array)
 
+## Wiki
+
+[EN](WIKI_EN.md) | [RU](WIKI_RU.md)
+
 ## Tested on
 
 1. [ESP32 ESP-IDF v6.0.0](https://docs.espressif.com/projects/esp-idf/en/v6.0/esp32/index.html)

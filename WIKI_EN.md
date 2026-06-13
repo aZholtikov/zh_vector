@@ -318,7 +318,7 @@ void app_main(void)
 | **Memory Management** | heap_caps_calloc, heap_caps_realloc, heap_caps_free |
 | **Memory Caps** | MALLOC_CAP_8BIT |
 | **Thread Safety** | Not thread-safe |
-| **ESP-IDF Version** | Tested with v6.0.0 |
+| **ESP-IDF Version** | >= 5.0 |
 | **Platform** | ESP32 series |
 | **Language** | C (C99) |
 

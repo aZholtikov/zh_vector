@@ -221,33 +221,27 @@ zh_vector_t int_vector = {0};
 
 void app_main(void)
 {
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
     // Initialize vector for integers
     zh_vector_init(&int_vector, sizeof(int));
-    
     // Add elements
     int val1 = 10;
     int val2 = 20;
     int val3 = 30;
-    
     zh_vector_push_back(&int_vector, &val1);
     zh_vector_push_back(&int_vector, &val2);
     zh_vector_push_back(&int_vector, &val3);
-    
     printf("Vector size: %d\n", zh_vector_get_size(&int_vector));
-    
     // Access elements
     for (int i = 0; i < zh_vector_get_size(&int_vector); i++) {
         int *item = (int *)zh_vector_get_item(&int_vector, i);
         printf("Element %d: %d\n", i, *item);
     }
-    
     // Change element
     int new_val = 100;
     zh_vector_change_item(&int_vector, 1, &new_val);
-    
     // Delete element
     zh_vector_delete_item(&int_vector, 0);
-    
     // Cleanup
     zh_vector_free(&int_vector);
 }
@@ -268,20 +262,17 @@ zh_vector_t struct_vector = {0};
 
 void app_main(void)
 {
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
     // Initialize vector for structs
     zh_vector_init(&struct_vector, sizeof(my_struct_t));
-    
     // Add struct elements
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
-    
     zh_vector_push_back(&struct_vector, &item1);
     zh_vector_push_back(&struct_vector, &item2);
-    
     // Access and modify
     my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(&struct_vector, 0);
     ptr->value = 10.5f;
-    
     // Cleanup
     zh_vector_free(&struct_vector);
 }
@@ -297,23 +288,20 @@ zh_vector_t string_vector = {0};
 
 void app_main(void)
 {
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
     // Initialize vector for strings (100 char max)
     char buffer[100] = {0};
     zh_vector_init(&string_vector, sizeof(buffer));
-    
     // Add strings
     strcpy(buffer, "Hello");
     zh_vector_push_back(&string_vector, &buffer);
-    
     strcpy(buffer, "World");
     zh_vector_push_back(&string_vector, &buffer);
-    
     // Print all strings
     for (int i = 0; i < zh_vector_get_size(&string_vector); i++) {
         char *str = (char *)zh_vector_get_item(&string_vector, i);
         printf("String %d: %s\n", i, str);
     }
-    
     // Cleanup
     zh_vector_free(&string_vector);
 }

@@ -57,6 +57,27 @@ esp_err_t zh_vector_get_size(zh_vector_t *vector)
     return vector->size;
 }
 
+esp_err_t zh_vector_push_front(zh_vector_t *vector, void *item) // -V2008
+{
+    ZH_LOGI("Adding item to beginning of vector begin.");
+    ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to beginning of vector fail. Invalid argument.");
+    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Adding item to beginning of vector fail. Vector not initialized.");
+    if (vector->capacity == vector->size)
+    {
+        ZH_ERROR_CHECK(_resize(vector, vector->capacity + 1) == ESP_OK, ESP_ERR_NO_MEM, NULL, "Adding item to beginning of vector fail. Memory allocation fail or no free memory in the heap.");
+    }
+    for (uint16_t i = vector->size; i > 0; --i)
+    {
+        vector->items[i] = vector->items[i - 1];
+    }
+    vector->items[0] = heap_caps_calloc(1, vector->unit, MALLOC_CAP_8BIT);
+    ZH_ERROR_CHECK(vector->items[0] != NULL, ESP_ERR_NO_MEM, NULL, "Adding item to beginning of vector fail. Memory allocation fail or no free memory in the heap.");
+    memcpy(vector->items[0], item, vector->unit);
+    ++vector->size;
+    ZH_LOGI("Adding item to beginning of vector success.");
+    return ESP_OK;
+}
+
 esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item) // -V2008
 {
     ZH_LOGI("Adding item to vector begin.");

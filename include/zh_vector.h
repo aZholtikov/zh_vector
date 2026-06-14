@@ -55,6 +55,16 @@ extern "C"
     esp_err_t zh_vector_get_size(zh_vector_t *vector);
 
     /**
+     * @brief Add item at beginning of vector.
+     *
+     * @param[in] vector Pointer to main structure of vector data.
+     * @param[in] item Pointer to item for add.
+     *
+     * @return ESP_OK if success or an error code otherwise.
+     */
+    esp_err_t zh_vector_push_front(zh_vector_t *vector, void *item);
+
+    /**
      * @brief Add item at end of vector.
      *
      * @param[in] vector Pointer to main structure of vector data.

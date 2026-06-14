@@ -133,6 +133,26 @@ Gets the current number of elements in the vector.
 
 ---
 
+### zh_vector_push_front()
+
+Adds an element to the beginning of the vector.
+
+**Parameters:**
+
+- `vector` - Pointer to the vector structure
+- `item` - Pointer to the element to add
+
+**Returns:**
+
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector or item)
+- `ESP_ERR_INVALID_STATE` - Vector not initialized
+- `ESP_ERR_NO_MEM` - Memory allocation failed
+
+**Note:** The function allocates memory for a copy of the item and copies the data. All existing elements are shifted right by one position.
+
+---
+
 ### zh_vector_push_back()
 
 Adds an element to the end of the vector.
@@ -228,7 +248,7 @@ void app_main(void)
     int val1 = 10;
     int val2 = 20;
     int val3 = 30;
-    zh_vector_push_back(&int_vector, &val1);
+    zh_vector_push_front(&int_vector, &val1);
     zh_vector_push_back(&int_vector, &val2);
     zh_vector_push_back(&int_vector, &val3);
     printf("Vector size: %d\n", zh_vector_get_size(&int_vector));
@@ -268,7 +288,7 @@ void app_main(void)
     // Add struct elements
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
-    zh_vector_push_back(&struct_vector, &item1);
+    zh_vector_push_front(&struct_vector, &item1);
     zh_vector_push_back(&struct_vector, &item2);
     // Access and modify
     my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(&struct_vector, 0);
@@ -294,7 +314,7 @@ void app_main(void)
     zh_vector_init(&string_vector, sizeof(buffer));
     // Add strings
     strcpy(buffer, "Hello");
-    zh_vector_push_back(&string_vector, &buffer);
+    zh_vector_push_front(&string_vector, &buffer);
     strcpy(buffer, "World");
     zh_vector_push_back(&string_vector, &buffer);
     // Print all strings
@@ -384,4 +404,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v1.1.2*
+*Generated for zh_vector v1.2.0*

@@ -133,6 +133,26 @@ zh_vector_init(&vector, sizeof(int)); // Для целых чисел
 
 ---
 
+### zh_vector_push_front()
+
+Добавляет элемент в начало вектора.
+
+**Параметры:**
+
+- `vector` - Указатель на структуру вектора
+- `item` - Указатель на элемент для добавления
+
+**Возвращает:**
+
+- `ESP_OK` - Успех
+- `ESP_ERR_INVALID_ARG` - Неверный аргумент (NULL вектор или item)
+- `ESP_ERR_INVALID_STATE` - Вектор не инициализирован
+- `ESP_ERR_NO_MEM` - Ошибка выделения памяти
+
+**Примечание:** Функция выделяет память для копии элемента и копирует данные. Все существующие элементы сдвигаются на одну позицию вправо.
+
+---
+
 ### zh_vector_push_back()
 
 Добавляет элемент в конец вектора.
@@ -228,7 +248,7 @@ void app_main(void)
     int val1 = 10;
     int val2 = 20;
     int val3 = 30;
-    zh_vector_push_back(&int_vector, &val1);
+    zh_vector_push_front(&int_vector, &val1);
     zh_vector_push_back(&int_vector, &val2);
     zh_vector_push_back(&int_vector, &val3);
     printf("Размер вектора: %d\n", zh_vector_get_size(&int_vector));
@@ -268,7 +288,7 @@ void app_main(void)
     // Добавление элементов-структур
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
-    zh_vector_push_back(&struct_vector, &item1);
+    zh_vector_push_front(&struct_vector, &item1);
     zh_vector_push_back(&struct_vector, &item2);
     // Доступ и модификация
     my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(&struct_vector, 0);
@@ -294,7 +314,7 @@ void app_main(void)
     zh_vector_init(&string_vector, sizeof(buffer));
     // Добавление строк
     strcpy(buffer, "Привет");
-    zh_vector_push_back(&string_vector, &buffer);
+    zh_vector_push_front(&string_vector, &buffer);
     strcpy(buffer, "Мир");
     zh_vector_push_back(&string_vector, &buffer);
     // Печать всех строк
@@ -384,4 +404,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v1.1.2*
+*Сгенерировано для zh_vector v1.2.0*

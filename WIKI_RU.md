@@ -384,4 +384,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v1.1.1*
+*Сгенерировано для zh_vector v1.1.2*

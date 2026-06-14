@@ -20,11 +20,11 @@ esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit, ...)
     ZH_LOGI("Vector initialization begin.");
     ZH_ERROR_CHECK(vector != NULL && unit != 0, ESP_ERR_INVALID_ARG, NULL, "Vector initialization failed. Invalid argument.");
     ZH_ERROR_CHECK(vector->is_initialized == false, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failed. Vector is already initialized.");
+    vector->items = NULL;
     vector->capacity = 0;
     vector->size = 0;
     vector->unit = unit;
     vector->is_initialized = true;
-    vector->items = heap_caps_calloc(1, sizeof(vector->items), MALLOC_CAP_8BIT);
     ZH_LOGI("Vector initialization success.");
     return ESP_OK;
 }
@@ -37,8 +37,12 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
     for (uint16_t i = 0; i < vector->size; ++i)
     {
         heap_caps_free(vector->items[i]);
+        vector->items[i] = NULL;
     }
     heap_caps_free(vector->items);
+    vector->items = NULL;
+    vector->size = 0;
+    vector->capacity = 0;
     vector->is_initialized = false;
     ZH_LOGI("Vector deletion success.");
     return ESP_OK;
@@ -93,16 +97,13 @@ void *zh_vector_get_item(zh_vector_t *vector, uint16_t index)
         ZH_LOGE("Getting item from vector fail. Vector not initialized.", ESP_ERR_INVALID_STATE);
         return NULL;
     }
-    if (index < vector->size)
-    {
-        ZH_LOGI("Getting item from vector success.");
-        return vector->items[index];
-    }
-    else
+    if (index >= vector->size)
     {
         ZH_LOGE("Getting item from vector fail. Index does not exist.", ESP_FAIL);
         return NULL;
     }
+    ZH_LOGI("Getting item from vector success.");
+    return vector->items[index];
 }
 
 esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index) // -V2008
@@ -112,20 +113,27 @@ esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index) // -V2008
     ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector fail. Vector not initialized.");
     ZH_ERROR_CHECK(index < vector->size, ESP_FAIL, NULL, "Deleting item in vector fail. Index does not exist.");
     heap_caps_free(vector->items[index]);
-    for (uint8_t i = index; i < (vector->size - 1); ++i)
+    for (uint16_t i = index; i < (vector->size - 1); ++i)
     {
         vector->items[i] = vector->items[i + 1];
-        vector->items[i + 1] = NULL;
     }
-    --vector->size;
-    ZH_ERROR_CHECK(_resize(vector, vector->capacity - 1) == ESP_OK, ESP_ERR_NO_MEM, NULL, "Deleting item in vector fail. Memory allocation fail or no free memory in the heap.");
+    vector->items[--vector->size] = NULL;
+    if (vector->capacity > vector->size)
+    {
+        ZH_ERROR_CHECK(_resize(vector, vector->size) == ESP_OK, ESP_ERR_NO_MEM, NULL, "Deleting item in vector fail. Memory allocation fail or no free memory in the heap.");
+    }
     ZH_LOGI("Deleting item in vector success.");
     return ESP_OK;
 }
 
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
 {
-    if (capacity != 0)
+    if (capacity == 0)
+    {
+        heap_caps_free(vector->items);
+        vector->items = NULL;
+    }
+    else
     {
         vector->items = heap_caps_realloc(vector->items, sizeof(void *) * capacity, MALLOC_CAP_8BIT);
         ZH_ERROR_CHECK(vector->items != NULL, ESP_ERR_NO_MEM, NULL, "Memory allocation fail or no free memory in the heap.");

@@ -384,4 +384,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v1.1.1*
+*Generated for zh_vector v1.1.2*

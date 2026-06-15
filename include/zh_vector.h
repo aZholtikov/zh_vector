@@ -8,6 +8,8 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -19,11 +21,12 @@ extern "C"
      */
     typedef struct
     {
-        void **items;        /*!< Array of pointers of vector items. */
-        uint16_t capacity;   /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
-        uint16_t size;       /*!< Number of items in the vector. */
-        uint16_t unit;       /*!< Vector item size. */
-        bool is_initialized; /*!< Vector initialization status flag. */
+        void **items;            /*!< Array of pointers of vector items. */
+        uint16_t capacity;       /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
+        uint16_t size;           /*!< Number of items in the vector. */
+        uint16_t unit;           /*!< Vector item size. */
+        bool is_initialized;     /*!< Vector initialization status flag. */
+        SemaphoreHandle_t mutex; /*!< FreeRTOS mutex. */
     } zh_vector_t;
 
     /**

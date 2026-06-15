@@ -30,7 +30,7 @@ The component is designed specifically for ESP32 microcontrollers and uses ESP-I
 4. **Maximum Capacity**: Up to 65,535 elements (16-bit index limit)
 5. **ESP-IDF Optimized**: Uses heap_caps functions for memory allocation with memory caps
 6. **Error Handling**: Comprehensive error checking with detailed logging
-7. **Thread-Safe**: Not thread-safe by default (can be made thread-safe with external mutex)
+7. **Thread-Safe**: Thread-safe (uses FreeRTOS mutex)
 8. **Minimal Overhead**: Low memory and CPU overhead
 
 ---
@@ -66,11 +66,12 @@ git clone https://github.com/aZholtikov/zh_vector
 ```c
 typedef struct
 {
-    void **items;        // Array of pointers of vector items
-    uint16_t capacity;   // Maximum capacity of the vector
-    uint16_t size;       // Number of items in the vector
-    uint16_t unit;       // Vector item size (in bytes)
-    bool is_initialized; // Vector initialization status flag
+    void **items;            // Array of pointers of vector items
+    uint16_t capacity;       // Maximum capacity of the vector
+    uint16_t size;           // Number of items in the vector
+    uint16_t unit;           // Vector item size (in bytes)
+    bool is_initialized;     // Vector initialization status flag
+    SemaphoreHandle_t mutex; // FreeRTOS mutex for thread safety
 } zh_vector_t;
 ```
 
@@ -337,7 +338,7 @@ void app_main(void)
 | **Index Type** | uint16_t (16-bit) |
 | **Memory Management** | heap_caps_calloc, heap_caps_realloc, heap_caps_free |
 | **Memory Caps** | MALLOC_CAP_8BIT |
-| **Thread Safety** | Not thread-safe |
+| **Thread Safety** | Thread-safe (uses FreeRTOS mutex) |
 | **ESP-IDF Version** | >= 5.0 |
 | **Platform** | ESP32 series |
 | **Language** | C (C99) |
@@ -404,4 +405,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v1.2.0*
+*Generated for zh_vector v1.3.0*

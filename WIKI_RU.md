@@ -37,25 +37,25 @@
 
 ## Установка
 
-1. Перейдите в каталог компонентов вашего проекта:
+Перейдите в каталог компонентов вашего проекта:
 
 ```bash
 cd ../ваш_проект/components
 ```
 
-2. Клонируйте репозиторий:
+Клонируйте репозиторий:
 
 ```bash
 git clone https://github.com/aZholtikov/zh_vector
 ```
 
-3. В вашем приложении подключите заголовочный файл:
+В вашем приложении подключите заголовочный файл:
 
 ```c
 #include "zh_vector.h"
 ```
 
-4. Компонент будет автоматически собран вместе с вашим проектом.
+Компонент будет автоматически собран вместе с вашим проектом.
 
 ---
 
@@ -63,17 +63,16 @@ git clone https://github.com/aZholtikov/zh_vector
 
 ### Структура zh_vector_t
 
-```c
-typedef struct
-{
-    void **items;            // Массив указателей на элементы вектора
-    uint16_t capacity;       // Максимальная емкость вектора
-    uint16_t size;           // Количество элементов в векторе
-    uint16_t unit;           // Размер элемента вектора (в байтах)
-    bool is_initialized;     // Флаг состояния инициализации вектора
-    SemaphoreHandle_t mutex; // FreeRTOS mutex для потокобезопасности
-} zh_vector_t;
-```
+Структура объявляется как `typedef struct _zh_vector_t zh_vector_t;` и инкапсулирует внутренние детали реализации.
+
+**Поля (внутренние):**
+
+- `void **items` — Массив указателей на элементы вектора
+- `uint16_t capacity` — Максимальная емкость вектора
+- `uint16_t size` — Количество элементов в векторе
+- `uint16_t unit` — Размер элемента вектора (в байтах)
+- `uint32_t is_initialized` — Флаг состояния инициализации вектора
+- `SemaphoreHandle_t mutex` — FreeRTOS mutex для потокобезопасности
 
 ---
 
@@ -83,7 +82,7 @@ typedef struct
 
 **Параметры:**
 
-- `vector` - Указатель на структуру вектора
+- `vector` - Указатель на указатель на структуру вектора (`zh_vector_t **`). Если указатель на вектор равен NULL, будет выделена память.
 - `unit` - Размер каждого элемента в байтах
 
 **Возвращает:**
@@ -91,12 +90,17 @@ typedef struct
 - `ESP_OK` - Успех
 - `ESP_ERR_INVALID_ARG` - Неверный аргумент (NULL вектор или нулевой размер unit)
 - `ESP_ERR_INVALID_STATE` - Вектор уже инициализирован
+- `ESP_ERR_NO_MEM` - Ошибка выделения памяти
 
 **Пример:**
 
 ```c
-zh_vector_t vector = {0};
-zh_vector_init(&vector, sizeof(int)); // Для целых чисел
+zh_vector_t *vector = NULL;
+esp_err_t ret = zh_vector_init(&vector, sizeof(int)); // Для целых чисел
+if (ret != ESP_OK) {
+    // Обработка ошибки
+}
+// Не забудьте освободить: zh_vector_free(vector);
 ```
 
 ---
@@ -126,11 +130,12 @@ zh_vector_init(&vector, sizeof(int)); // Для целых чисел
 **Параметры:**
 
 - `vector` - Указатель на структуру вектора
+- `size` - Указатель на переменную для сохранения размера
 
 **Возвращает:**
 
-- `>= 0` - Количество элементов (успех)
-- `ESP_FAIL` - Ошибка (NULL вектор или не инициализирован)
+- `ESP_OK` - Успех
+- `ESP_ERR_INVALID_ARG` - Неверный аргумент (NULL вектор или size)
 
 ---
 
@@ -204,7 +209,7 @@ zh_vector_init(&vector, sizeof(int)); // Для целых чисел
 
 **Возвращает:**
 
-- Указатель на элемент (успех)
+- `void *` - Указатель на элемент (успех)
 - `NULL` - Ошибка (NULL вектор, не инициализирован или неверный индекс)
 
 **Примечание:** Возвращает указатель на внутренние данные. Не освобождайте этот указатель.
@@ -238,33 +243,50 @@ zh_vector_init(&vector, sizeof(int)); // Для целых чисел
 ```c
 #include "zh_vector.h"
 
-zh_vector_t int_vector = {0};
-
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+
+    zh_vector_t *vector = NULL;
+    
     // Инициализация вектора для целых чисел
-    zh_vector_init(&int_vector, sizeof(int));
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Ошибка инициализации вектора\n");
+        return;
+    }
+    
     // Добавление элементов
     int val1 = 10;
     int val2 = 20;
     int val3 = 30;
-    zh_vector_push_front(&int_vector, &val1);
-    zh_vector_push_back(&int_vector, &val2);
-    zh_vector_push_back(&int_vector, &val3);
-    printf("Размер вектора: %d\n", zh_vector_get_size(&int_vector));
-    // Доступ к элементам
-    for (int i = 0; i < zh_vector_get_size(&int_vector); i++) {
-        int *item = (int *)zh_vector_get_item(&int_vector, i);
-        printf("Элемент %d: %d\n", i, *item);
+    zh_vector_push_front(vector, &val1);
+    zh_vector_push_back(vector, &val2);
+    zh_vector_push_back(vector, &val3);
+    
+    size_t size;
+    ret = zh_vector_get_size(vector, &size);
+    if (ret == ESP_OK) {
+        printf("Размер вектора: %zu\n", size);
     }
+    
+    // Доступ к элементам
+    for (int i = 0; i < size; i++) {
+        int *item = (int *)zh_vector_get_item(vector, i);
+        if (item != NULL) {
+            printf("Элемент %d: %d\n", i, *item);
+        }
+    }
+    
     // Изменение элемента
     int new_val = 100;
-    zh_vector_change_item(&int_vector, 1, &new_val);
+    zh_vector_change_item(vector, 1, &new_val);
+    
     // Удаление элемента
-    zh_vector_delete_item(&int_vector, 0);
+    zh_vector_delete_item(vector, 0);
+    
     // Очистка
-    zh_vector_free(&int_vector);
+    zh_vector_free(vector);
 }
 ```
 
@@ -279,23 +301,33 @@ typedef struct {
     float value;
 } my_struct_t;
 
-zh_vector_t struct_vector = {0};
-
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    
+    zh_vector_t *vector = NULL;
+    
     // Инициализация вектора для структур
-    zh_vector_init(&struct_vector, sizeof(my_struct_t));
+    esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
+    if (ret != ESP_OK) {
+        printf("Ошибка инициализации вектора\n");
+        return;
+    }
+    
     // Добавление элементов-структур
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
-    zh_vector_push_front(&struct_vector, &item1);
-    zh_vector_push_back(&struct_vector, &item2);
+    zh_vector_push_front(vector, &item1);
+    zh_vector_push_back(vector, &item2);
+    
     // Доступ и модификация
-    my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(&struct_vector, 0);
-    ptr->value = 10.5f;
+    my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(vector, 0);
+    if (ptr != NULL) {
+        ptr->value = 10.5f;
+    }
+    
     // Очистка
-    zh_vector_free(&struct_vector);
+    zh_vector_free(vector);
 }
 ```
 
@@ -303,28 +335,41 @@ void app_main(void)
 
 ```c
 #include "zh_vector.h"
-#include "string.h"
-
-zh_vector_t string_vector = {0};
 
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-    // Инициализация вектора для строк (макс. 100 символов)
+    
+    zh_vector_t *vector = NULL;
     char buffer[100] = {0};
-    zh_vector_init(&string_vector, sizeof(buffer));
+    
+    // Инициализация вектора для строк (макс. 100 символов)
+    esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
+    if (ret != ESP_OK) {
+        printf("Ошибка инициализации вектора\n");
+        return;
+    }
+    
     // Добавление строк
     strcpy(buffer, "Привет");
-    zh_vector_push_front(&string_vector, &buffer);
+    zh_vector_push_front(vector, &buffer);
     strcpy(buffer, "Мир");
-    zh_vector_push_back(&string_vector, &buffer);
-    // Печать всех строк
-    for (int i = 0; i < zh_vector_get_size(&string_vector); i++) {
-        char *str = (char *)zh_vector_get_item(&string_vector, i);
-        printf("Строка %d: %s\n", i, str);
+    zh_vector_push_back(vector, &buffer);
+    
+    size_t size;
+    ret = zh_vector_get_size(vector, &size);
+    if (ret == ESP_OK) {
+        // Печать всех строк
+        for (int i = 0; i < size; i++) {
+            char *str = (char *)zh_vector_get_item(vector, i);
+            if (str != NULL) {
+                printf("Строка %d: %s\n", i, str);
+            }
+        }
     }
+    
     // Очистка
-    zh_vector_free(&string_vector);
+    zh_vector_free(vector);
 }
 ```
 
@@ -405,4 +450,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v1.3.0*
+*Сгенерировано для zh_vector v2.0.0*

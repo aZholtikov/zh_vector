@@ -19,15 +19,7 @@ extern "C"
     /**
      * @brief Main structure of vector data.
      */
-    typedef struct
-    {
-        void **items;            /*!< Array of pointers of vector items. */
-        uint16_t capacity;       /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
-        uint16_t size;           /*!< Number of items in the vector. */
-        uint16_t unit;           /*!< Vector item size. */
-        bool is_initialized;     /*!< Vector initialization status flag. */
-        SemaphoreHandle_t mutex; /*!< FreeRTOS mutex. */
-    } zh_vector_t;
+    typedef struct _zh_vector_t zh_vector_t;
 
     /**
      * @brief Initialize vector.
@@ -37,7 +29,7 @@ extern "C"
      *
      * @return ESP_OK if success or an error code otherwise.
      */
-    esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit, ...);
+    esp_err_t zh_vector_init(zh_vector_t **vector, uint16_t unit);
 
     /**
      * @brief Deinitialize vector. Free all allocated memory.
@@ -52,10 +44,11 @@ extern "C"
      * @brief Get current vector size.
      *
      * @param[in] vector Pointer to main structure of vector data.
+     * @param[out] vector Pointer to vector size.
      *
      * @return Vector size if success or ESP_FAIL otherwise.
      */
-    esp_err_t zh_vector_get_size(zh_vector_t *vector);
+    esp_err_t zh_vector_get_size(zh_vector_t *vector, size_t *size);
 
     /**
      * @brief Add item at beginning of vector.
@@ -65,7 +58,7 @@ extern "C"
      *
      * @return ESP_OK if success or an error code otherwise.
      */
-    esp_err_t zh_vector_push_front(zh_vector_t *vector, void *item);
+    esp_err_t zh_vector_push_front(zh_vector_t *vector, const void *item);
 
     /**
      * @brief Add item at end of vector.
@@ -75,7 +68,7 @@ extern "C"
      *
      * @return ESP_OK if success or an error code otherwise.
      */
-    esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item);
+    esp_err_t zh_vector_push_back(zh_vector_t *vector, const void *item);
 
     /**
      * @brief Change item by index.
@@ -86,7 +79,7 @@ extern "C"
      *
      * @return ESP_OK if success or an error code otherwise.
      */
-    esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item);
+    esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, const void *item);
 
     /**
      * @brief Get item by index.

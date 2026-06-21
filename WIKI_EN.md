@@ -37,25 +37,25 @@ The component is designed specifically for ESP32 microcontrollers and uses ESP-I
 
 ## Installation
 
-1. Navigate to your project's components directory:
+Navigate to your project's components directory:
 
 ```bash
 cd ../your_project/components
 ```
 
-2. Clone the repository:
+Clone the repository:
 
 ```bash
 git clone https://github.com/aZholtikov/zh_vector
 ```
 
-3. In your application, include the header:
+In your application, include the header:
 
 ```c
 #include "zh_vector.h"
 ```
 
-4. The component will be automatically built with your project.
+The component will be automatically built with your project.
 
 ---
 
@@ -63,17 +63,16 @@ git clone https://github.com/aZholtikov/zh_vector
 
 ### zh_vector_t Structure
 
-```c
-typedef struct
-{
-    void **items;            // Array of pointers of vector items
-    uint16_t capacity;       // Maximum capacity of the vector
-    uint16_t size;           // Number of items in the vector
-    uint16_t unit;           // Vector item size (in bytes)
-    bool is_initialized;     // Vector initialization status flag
-    SemaphoreHandle_t mutex; // FreeRTOS mutex for thread safety
-} zh_vector_t;
-```
+The structure is declared as `typedef struct _zh_vector_t zh_vector_t;` and encapsulates internal implementation details.
+
+**Internal fields:**
+
+- `void **items` — Array of pointers to vector elements
+- `uint16_t capacity` — Maximum capacity of the vector
+- `uint16_t size` — Number of items in the vector
+- `uint16_t unit` — Vector item size (in bytes)
+- `uint32_t is_initialized` — Vector initialization status flag
+- `SemaphoreHandle_t mutex` — FreeRTOS mutex for thread safety
 
 ---
 
@@ -83,7 +82,7 @@ Initializes the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). If the vector pointer is NULL, memory will be allocated.
 - `unit` - Size of each element in bytes
 
 **Returns:**
@@ -91,12 +90,17 @@ Initializes the vector.
 - `ESP_OK` - Success
 - `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector or zero unit size)
 - `ESP_ERR_INVALID_STATE` - Vector already initialized
+- `ESP_ERR_NO_MEM` - Memory allocation failed
 
 **Example:**
 
 ```c
-zh_vector_t vector = {0};
-zh_vector_init(&vector, sizeof(int)); // For integers
+zh_vector_t *vector = NULL;
+esp_err_t ret = zh_vector_init(&vector, sizeof(int)); // For integers
+if (ret != ESP_OK) {
+    // Handle error
+}
+// Don't forget to free: zh_vector_free(vector);
 ```
 
 ---
@@ -126,11 +130,12 @@ Gets the current number of elements in the vector.
 **Parameters:**
 
 - `vector` - Pointer to the vector structure
+- `size` - Pointer to variable to store the size
 
 **Returns:**
 
-- `>= 0` - Number of elements (success)
-- `ESP_FAIL` - Error (NULL vector or not initialized)
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector or size pointer)
 
 ---
 
@@ -204,7 +209,7 @@ Gets an element at a specific index.
 
 **Returns:**
 
-- Pointer to the element (success)
+- `void *` - Pointer to the element (success)
 - `NULL` - Error (NULL vector, not initialized, or invalid index)
 
 **Note:** Returns a pointer to the internal data. Do not free this pointer.
@@ -238,33 +243,50 @@ Deletes an element at a specific index and shifts all subsequent elements.
 ```c
 #include "zh_vector.h"
 
-zh_vector_t int_vector = {0};
-
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    
+    zh_vector_t *vector = NULL;
+    
     // Initialize vector for integers
-    zh_vector_init(&int_vector, sizeof(int));
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+    
     // Add elements
     int val1 = 10;
     int val2 = 20;
     int val3 = 30;
-    zh_vector_push_front(&int_vector, &val1);
-    zh_vector_push_back(&int_vector, &val2);
-    zh_vector_push_back(&int_vector, &val3);
-    printf("Vector size: %d\n", zh_vector_get_size(&int_vector));
-    // Access elements
-    for (int i = 0; i < zh_vector_get_size(&int_vector); i++) {
-        int *item = (int *)zh_vector_get_item(&int_vector, i);
-        printf("Element %d: %d\n", i, *item);
+    zh_vector_push_front(vector, &val1);
+    zh_vector_push_back(vector, &val2);
+    zh_vector_push_back(vector, &val3);
+    
+    size_t size;
+    ret = zh_vector_get_size(vector, &size);
+    if (ret == ESP_OK) {
+        printf("Vector size: %zu\n", size);
     }
+    
+    // Access elements
+    for (int i = 0; i < size; i++) {
+        int *item = (int *)zh_vector_get_item(vector, i);
+        if (item != NULL) {
+            printf("Element %d: %d\n", i, *item);
+        }
+    }
+    
     // Change element
     int new_val = 100;
-    zh_vector_change_item(&int_vector, 1, &new_val);
+    zh_vector_change_item(vector, 1, &new_val);
+    
     // Delete element
-    zh_vector_delete_item(&int_vector, 0);
+    zh_vector_delete_item(vector, 0);
+    
     // Cleanup
-    zh_vector_free(&int_vector);
+    zh_vector_free(vector);
 }
 ```
 
@@ -279,23 +301,33 @@ typedef struct {
     float value;
 } my_struct_t;
 
-zh_vector_t struct_vector = {0};
-
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    
+    zh_vector_t *vector = NULL;
+    
     // Initialize vector for structs
-    zh_vector_init(&struct_vector, sizeof(my_struct_t));
+    esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+    
     // Add struct elements
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
-    zh_vector_push_front(&struct_vector, &item1);
-    zh_vector_push_back(&struct_vector, &item2);
+    zh_vector_push_front(vector, &item1);
+    zh_vector_push_back(vector, &item2);
+    
     // Access and modify
-    my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(&struct_vector, 0);
-    ptr->value = 10.5f;
+    my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(vector, 0);
+    if (ptr != NULL) {
+        ptr->value = 10.5f;
+    }
+    
     // Cleanup
-    zh_vector_free(&struct_vector);
+    zh_vector_free(vector);
 }
 ```
 
@@ -303,28 +335,41 @@ void app_main(void)
 
 ```c
 #include "zh_vector.h"
-#include "string.h"
-
-zh_vector_t string_vector = {0};
 
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-    // Initialize vector for strings (100 char max)
+    
+    zh_vector_t *vector = NULL;
     char buffer[100] = {0};
-    zh_vector_init(&string_vector, sizeof(buffer));
+    
+    // Initialize vector for strings (100 char max)
+    esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+    
     // Add strings
     strcpy(buffer, "Hello");
-    zh_vector_push_front(&string_vector, &buffer);
+    zh_vector_push_front(vector, &buffer);
     strcpy(buffer, "World");
-    zh_vector_push_back(&string_vector, &buffer);
-    // Print all strings
-    for (int i = 0; i < zh_vector_get_size(&string_vector); i++) {
-        char *str = (char *)zh_vector_get_item(&string_vector, i);
-        printf("String %d: %s\n", i, str);
+    zh_vector_push_back(vector, &buffer);
+    
+    size_t size;
+    ret = zh_vector_get_size(vector, &size);
+    if (ret == ESP_OK) {
+        // Print all strings
+        for (int i = 0; i < size; i++) {
+            char *str = (char *)zh_vector_get_item(vector, i);
+            if (str != NULL) {
+                printf("String %d: %s\n", i, str);
+            }
+        }
     }
+    
     // Cleanup
-    zh_vector_free(&string_vector);
+    zh_vector_free(vector);
 }
 ```
 
@@ -405,4 +450,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v1.3.0*
+*Generated for zh_vector v2.0.0*

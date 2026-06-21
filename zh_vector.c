@@ -13,20 +13,52 @@ static const char *TAG = "zh_vector";
         return err;                                  \
     }
 
+#define ZH_VECTOR_MAGIC 0x5A485643
+
+struct _zh_vector_t
+{
+    void **items;            /*!< Array of pointers of vector items. */
+    uint16_t capacity;       /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
+    uint16_t size;           /*!< Number of items in the vector. */
+    uint16_t unit;           /*!< Vector item size. */
+    uint32_t is_initialized; /*!< Vector initialization status flag. */
+    SemaphoreHandle_t mutex; /*!< FreeRTOS mutex. */
+};
+
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity);
 
-esp_err_t zh_vector_init(zh_vector_t *vector, uint16_t unit, ...)
+esp_err_t zh_vector_init(zh_vector_t **vector, uint16_t unit) // -V2008
 {
     ZH_LOGI("Vector initialization begin.");
-    ZH_ERROR_CHECK(vector != NULL && unit != 0, ESP_ERR_INVALID_ARG, NULL, "Vector initialization failed. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == false, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failed. Vector is already initialized.");
-    vector->mutex = xSemaphoreCreateMutex();
-    ZH_ERROR_CHECK(vector->mutex != NULL, ESP_ERR_NO_MEM, NULL, "Vector initialization failed. Failed to create mutex.");
-    vector->items = NULL;
-    vector->capacity = 0;
-    vector->size = 0;
-    vector->unit = unit;
-    vector->is_initialized = true;
+    ZH_ERROR_CHECK(vector != NULL && unit > 0, ESP_ERR_INVALID_ARG, NULL, "Vector initialization failed. Invalid argument.");
+    if (*vector == NULL)
+    {
+        *vector = heap_caps_calloc(1, sizeof(zh_vector_t), MALLOC_CAP_8BIT);
+        ZH_ERROR_CHECK(*vector != NULL, ESP_ERR_NO_MEM, NULL, "Vector initialization failed. Failed to allocate vector structure.");
+    }
+    else
+    {
+        ZH_ERROR_CHECK((*vector)->is_initialized != ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Vector initialization failed. Vector is already initialized.");
+        if ((*vector)->mutex != NULL)
+        {
+            vSemaphoreDelete((*vector)->mutex);
+            (*vector)->mutex = NULL;
+        }
+        if ((*vector)->items != NULL)
+        {
+            heap_caps_free((*vector)->items);
+            (*vector)->items = NULL;
+            (*vector)->size = 0;
+            (*vector)->capacity = 0;
+        }
+    }
+    (*vector)->mutex = xSemaphoreCreateMutex();
+    ZH_ERROR_CHECK((*vector)->mutex != NULL, ESP_ERR_NO_MEM, heap_caps_free(*vector); *vector = NULL, "Vector initialization failed. Failed to create mutex.");
+    (*vector)->items = NULL;
+    (*vector)->capacity = 0;
+    (*vector)->size = 0;
+    (*vector)->unit = unit;
+    (*vector)->is_initialized = ZH_VECTOR_MAGIC;
     ZH_LOGI("Vector initialization success.");
     return ESP_OK;
 }
@@ -35,8 +67,8 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
 {
     ZH_LOGI("Vector deletion begin.");
     ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Vector deletion failed. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Vector deletion fail. Vector not initialized.");
-    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_FAIL, NULL, "Vector deletion fail. Failed to acquire mutex.");
+    ZH_ERROR_CHECK(vector->is_initialized == ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Vector deletion fail. Vector not initialized.");
+    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Vector deletion fail. Failed to acquire mutex.");
     for (uint16_t i = 0; i < vector->size; ++i)
     {
         if (vector->items[i] != NULL)
@@ -51,29 +83,30 @@ esp_err_t zh_vector_free(zh_vector_t *vector)
     vector->capacity = 0;
     vSemaphoreDelete(vector->mutex);
     vector->mutex = NULL;
-    vector->is_initialized = false;
+    vector->is_initialized = 0;
+    heap_caps_free(vector);
     ZH_LOGI("Vector deletion success.");
     return ESP_OK;
 }
 
-esp_err_t zh_vector_get_size(zh_vector_t *vector)
+esp_err_t zh_vector_get_size(zh_vector_t *vector, size_t *size)
 {
     ZH_LOGI("Getting vector size begin.");
-    ZH_ERROR_CHECK(vector != NULL, ESP_FAIL, NULL, "Getting vector size fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_FAIL, NULL, "Getting vector size fail. Vector not initialized.");
-    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_FAIL, NULL, "Getting vector size fail. Failed to acquire mutex.");
-    size_t size = vector->size;
+    ZH_ERROR_CHECK(vector != NULL && size != NULL, ESP_ERR_INVALID_ARG, NULL, "Getting vector size fail. Invalid argument.");
+    ZH_ERROR_CHECK(vector->is_initialized == ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Getting vector size fail. Vector not initialized.");
+    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Getting vector size fail. Failed to acquire mutex.");
+    *size = vector->size;
     xSemaphoreGive(vector->mutex);
     ZH_LOGI("Getting vector size success.");
-    return (esp_err_t)size;
+    return ESP_OK;
 }
 
-esp_err_t zh_vector_push_front(zh_vector_t *vector, void *item) // -V2008
+esp_err_t zh_vector_push_front(zh_vector_t *vector, const void *item) // -V2008
 {
     ZH_LOGI("Adding item to beginning of vector begin.");
     ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to beginning of vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Adding item to beginning of vector fail. Vector not initialized.");
-    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_FAIL, NULL, "Adding item to beginning of vector fail. Failed to acquire mutex.");
+    ZH_ERROR_CHECK(vector->is_initialized == ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Adding item to beginning of vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Adding item to beginning of vector fail. Failed to acquire mutex.");
     if (vector->capacity == vector->size)
     {
         ZH_ERROR_CHECK(_resize(vector, vector->capacity + 1) == ESP_OK, ESP_ERR_NO_MEM, xSemaphoreGive(vector->mutex), "Adding item to beginning of vector fail. Memory allocation fail or no free memory in the heap.");
@@ -91,12 +124,12 @@ esp_err_t zh_vector_push_front(zh_vector_t *vector, void *item) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item) // -V2008
+esp_err_t zh_vector_push_back(zh_vector_t *vector, const void *item) // -V2008
 {
     ZH_LOGI("Adding item to vector begin.");
     ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Adding item to vector fail. Vector not initialized.");
-    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_FAIL, NULL, "Adding item to vector fail. Failed to acquire mutex.");
+    ZH_ERROR_CHECK(vector->is_initialized == ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Adding item to vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Adding item to vector fail. Failed to acquire mutex.");
     if (vector->capacity == vector->size)
     {
         ZH_ERROR_CHECK(_resize(vector, vector->capacity + 1) == ESP_OK, ESP_ERR_NO_MEM, xSemaphoreGive(vector->mutex), "Adding item to vector fail. Memory allocation fail or no free memory in the heap.");
@@ -111,13 +144,13 @@ esp_err_t zh_vector_push_back(zh_vector_t *vector, void *item) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, void *item) // -V2008
+esp_err_t zh_vector_change_item(zh_vector_t *vector, uint16_t index, const void *item) // -V2008
 {
     ZH_LOGI("Changing item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Changing item in vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Changing item in vector fail. Vector not initialized.");
-    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_FAIL, NULL, "Changing item in vector fail. Failed to acquire mutex.");
-    ZH_ERROR_CHECK(index < vector->size, ESP_FAIL, NULL, "Changing item in vector fail. Index does not exist.");
+    ZH_ERROR_CHECK(vector->is_initialized == ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Changing item in vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Changing item in vector fail. Failed to acquire mutex.");
+    ZH_ERROR_CHECK(index < vector->size, ESP_ERR_INVALID_ARG, NULL, "Changing item in vector fail. Index does not exist.");
     memcpy(vector->items[index], item, vector->unit);
     xSemaphoreGive(vector->mutex);
     ZH_LOGI("Changing item in vector success.");
@@ -132,7 +165,7 @@ void *zh_vector_get_item(zh_vector_t *vector, uint16_t index) // -V2008
         ZH_LOGE("Getting item from vector fail. Invalid argument.", ESP_ERR_INVALID_ARG);
         return NULL;
     }
-    if (vector->is_initialized == false)
+    if (vector->is_initialized != ZH_VECTOR_MAGIC)
     {
         ZH_LOGE("Getting item from vector fail. Vector not initialized.", ESP_ERR_INVALID_STATE);
         return NULL;
@@ -159,9 +192,9 @@ esp_err_t zh_vector_delete_item(zh_vector_t *vector, uint16_t index) // -V2008
 {
     ZH_LOGI("Deleting item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector fail. Invalid argument.");
-    ZH_ERROR_CHECK(vector->is_initialized == true, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector fail. Vector not initialized.");
-    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_FAIL, NULL, "Deleting item in vector fail. Failed to acquire mutex.");
-    ZH_ERROR_CHECK(index < vector->size, ESP_FAIL, NULL, "Deleting item in vector fail. Index does not exist.");
+    ZH_ERROR_CHECK(vector->is_initialized == ZH_VECTOR_MAGIC, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector fail. Vector not initialized.");
+    ZH_ERROR_CHECK(xSemaphoreTake(vector->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector fail. Failed to acquire mutex.");
+    ZH_ERROR_CHECK(index < vector->size, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector fail. Index does not exist.");
     void *freed_item = vector->items[index];
     for (uint16_t i = index; i < (vector->size - 1); ++i)
     {

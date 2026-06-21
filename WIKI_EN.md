@@ -287,6 +287,7 @@ void app_main(void)
     
     // Cleanup
     zh_vector_free(vector);
+    vector = NULL;
 }
 ```
 
@@ -328,6 +329,7 @@ void app_main(void)
     
     // Cleanup
     zh_vector_free(vector);
+    vector = NULL;
 }
 ```
 
@@ -370,6 +372,7 @@ void app_main(void)
     
     // Cleanup
     zh_vector_free(vector);
+    vector = NULL;
 }
 ```
 

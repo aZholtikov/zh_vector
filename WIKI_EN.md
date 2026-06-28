@@ -69,12 +69,12 @@ The structure is declared as `typedef struct _zh_vector_t zh_vector_t;` and enca
 
 **Internal fields:**
 
-- `void **items` — Array of pointers to vector elements
-- `uint16_t capacity` — Maximum capacity of the vector
-- `uint16_t size` — Number of items in the vector
-- `uint16_t unit` — Vector item size (in bytes)
-- `uint32_t is_initialized` — Vector initialization status flag
-- `SemaphoreHandle_t mutex` — FreeRTOS mutex for thread safety
+- `void **items` — Array of pointers to vector elements. Items[0..size-1] are valid. Allocated via heap_caps_calloc, resized via heap_caps_realloc.
+- `uint16_t capacity` — Current allocated capacity (number of slots). Grows on insertion — may exceed size after deletions.
+- `uint16_t size` — Current number of elements (0 ≤ size ≤ capacity).
+- `uint16_t unit` — Size (in bytes) of a single element. Set at init and must not change.
+- `uint32_t is_initialized` — State: 0x5A485643 (ZH_VECTOR_MAGIC) = initialized, 0 = uninitialized/freed.
+- `SemaphoreHandle_t mutex` — FreeRTOS mutex. Created in zh_vector_init, deleted in zh_vector_free. Auto-locked/unlocked in public functions.
 
 ---
 

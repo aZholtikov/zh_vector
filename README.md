@@ -15,7 +15,9 @@
 ## Features
 
 1. Support of any data types.
-2. The maximum size of the veсtor is 65535 elements.
+2. The maximum size of the vector is 65535 elements.
+3. Thread-safe implementation using FreeRTOS mutex.
+4. Automatic memory management with heap_caps functions.
 
 ## Using
 

@@ -34,7 +34,7 @@ extern "C"
     /**
      * @brief Initializes a vector.
      *
-     * Allocates memory for the vector structure, internal item pointer array, and a FreeRTOS mutex.
+     * Allocates memory for the vector structure, internal item pointer array and a FreeRTOS mutex.
      *
      * If `*vector` is non-NULL on entry:
      * - If the vector is already initialized (`is_initialized == ZH_VECTOR_MAGIC`), returns `ESP_ERR_INVALID_STATE`.
@@ -43,7 +43,7 @@ extern "C"
      *   and reinitializes.
      *
      * @note Uses `ZH_VECTOR_MAGIC` magic value to distinguish initialized vs uninitialized state.
-     * @note Safe to call with `*vector == NULL`, or with `*vector` pointing to uninitialized memory.
+     * @note Safe to call with `*vector == NULL` or with `*vector` pointing to uninitialized memory.
      * @warning Do not call this function twice on the same vector without an intervening `zh_vector_free()` —
      *          it will return `ESP_ERR_INVALID_STATE`. To reuse a vector, call `zh_vector_free(&v);`
      *          then `zh_vector_init(&v, ...);`.
@@ -93,7 +93,8 @@ extern "C"
      * The vector owns the lifetime of this copy (freed on `zh_vector_free()` or `zh_vector_delete_item()`).
      * All existing items are shifted one position to the right.
      * This may involve reallocation of the internal pointer array via `heap_caps_realloc`.
-     * @note Memory for the item and potential reallocation is done via `heap_caps_realloc` (`MALLOC_CAP_INTERNAL` or `MALLOC_CAP_DEFAULT`).
+     *
+     * @note Memory for the item and potential reallocation is done via `heap_caps_realloc` (`MALLOC_CAP_8BIT`).
      *
      * @param[in,out] vector Double pointer to vector structure (`zh_vector_t **`). Must not be `NULL`.
      * @param[in] item Pointer to the data to copy into the new item. Must not be `NULL`.
@@ -111,7 +112,8 @@ extern "C"
      * A copy of `item` is allocated on the heap and stored in the vector.
      * The vector owns the lifetime of this copy (freed on `zh_vector_free()` or `zh_vector_delete_item()`).
      * This may involve reallocation of the internal pointer array via `heap_caps_realloc`.
-     * @note Memory for the item and potential reallocation is done via `heap_caps_realloc` (`MALLOC_CAP_INTERNAL` or `MALLOC_CAP_DEFAULT`).
+     *
+     * @note Memory for the item and potential reallocation is done via `heap_caps_realloc` (`MALLOC_CAP_8BIT`).
      *
      * @param[in,out] vector Double pointer to vector structure (`zh_vector_t **`). Must not be `NULL`.
      * @param[in] item Pointer to the data to copy into the new item. Must not be `NULL`.

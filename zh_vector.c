@@ -15,14 +15,30 @@ static const char *TAG = "zh_vector";
 
 #define ZH_VECTOR_MAGIC 0x5A485643
 
+/**
+ * @brief Internal representation of a thread-safe, dynamically resizing vector of *copied* elements.
+ *
+ * Stores pointers to heap-allocated copies of elements (not raw pointers).
+ * Each element is allocated/freed via heap_caps_calloc/heap_caps_free.
+ * Supports push front/back, change, delete and size queries.
+ * Thread safety via FreeRTOS mutex.
+ *
+ * @note Opaque type: only zh_vector_t (typedef struct _zh_vector_t* zh_vector_t) is exposed.
+ * @note Elements are deep-copied - ownership of item is not transferred.
+ * @note All public functions lock the mutex internally — no external locking required.
+ *
+ * @warning Do not access fields directly.
+ * @warning Unit must match element size - mismatch causes heap corruption.
+ * @warning The capacity may exceed size after deletions but is reduced only via _resize.
+ */
 struct _zh_vector_t
 {
-    void **items;            /*!< Array of pointers of vector items. */
-    uint16_t capacity;       /*!< Maximum capacity of the vector. @note Used to control the size of allocated memory for array of pointers of vector items. Usually equal to the current number of items in the vector. Automatically changes when items are added or deleted. */
-    uint16_t size;           /*!< Number of items in the vector. */
-    uint16_t unit;           /*!< Vector item size. */
-    uint32_t is_initialized; /*!< Vector initialization status flag. */
-    SemaphoreHandle_t mutex; /*!< FreeRTOS mutex. */
+    void **items;            /*!< Array of element pointers. Items[0..size-1] are valid. Allocated via heap_caps_calloc, resized via heap_caps_realloc. */
+    uint16_t capacity;       /*!< Current allocated capacity (number of slots). Grows on insertion - may exceed size after deletions. */
+    uint16_t size;           /*!< Current number of elements (0 ≤ size ≤ capacity). */
+    uint16_t unit;           /*!< Size (in bytes) of a single element. Set at init and must not change. */
+    uint32_t is_initialized; /*!< State: 0x5A485643 (ZH_VECTOR_MAGIC) = initialized, 0 = uninitialized/freed. */
+    SemaphoreHandle_t mutex; /*!< FreeRTOS mutex. Created in zh_vector_init, deleted in zh_vector_free. Auto-locked/unlocked in public functions. */
 };
 
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity);

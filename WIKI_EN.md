@@ -24,56 +24,58 @@ The component is designed specifically for ESP32 microcontrollers and uses ESP-I
 
 ## Features
 
-1. **Type Agnostic**: Supports any data type (integers, floats, structs, custom types, etc.)
-2. **Automatic Memory Management**: Automatic memory allocation and deallocation
-3. **Dynamic Resizing**: Vector capacity grows and shrinks as needed
-4. **Maximum Capacity**: Up to 65,535 elements (16-bit index limit)
-5. **ESP-IDF Optimized**: Uses heap_caps functions for memory allocation with memory caps
-6. **Error Handling**: Comprehensive error checking with detailed logging
-7. **Thread-Safe**: Thread-safe (uses FreeRTOS mutex)
-8. **Minimal Overhead**: Low memory and CPU overhead
+- **Type Agnostic**: Supports any data type (integers, floats, structs, custom types, etc.)
+- **Automatic Memory Management**: Automatic memory allocation and deallocation
+- **Dynamic Resizing**: Vector capacity grows and shrinks as needed
+- **Maximum Capacity**: Up to 65,535 elements (16-bit index limit)
+- **ESP-IDF Optimized**: Uses heap_caps functions for memory allocation with memory caps
+- **Error Handling**: Comprehensive error checking with detailed logging
+- **Thread-Safe**: Thread-safe (uses FreeRTOS mutex)
+- **Minimal Overhead**: Low memory and CPU overhead
 
 ---
 
 ## Installation
 
-1. Navigate to your project's components directory:
+Navigate to your project's components directory:
 
 ```bash
 cd ../your_project/components
 ```
 
-2. Clone the repository:
+Clone the repository:
 
 ```bash
 git clone https://github.com/aZholtikov/zh_vector
 ```
 
-3. In your application, include the header:
+In your application, include the header:
 
 ```c
 #include "zh_vector.h"
 ```
 
-4. The component will be automatically built with your project.
+The component will be automatically built with your project.
 
 ---
 
 ## API Reference
 
+All functions in this library use double pointer (`zh_vector_t **`) for the vector parameter to allow for proper memory management and thread-safe operations.
+
 ### zh_vector_t Structure
 
-```c
-typedef struct
-{
-    void **items;            // Array of pointers of vector items
-    uint16_t capacity;       // Maximum capacity of the vector
-    uint16_t size;           // Number of items in the vector
-    uint16_t unit;           // Vector item size (in bytes)
-    bool is_initialized;     // Vector initialization status flag
-    SemaphoreHandle_t mutex; // FreeRTOS mutex for thread safety
-} zh_vector_t;
-```
+The structure is declared as `typedef struct _zh_vector_t zh_vector_t;` and encapsulates internal implementation details.
+
+**Fields (internal):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `items` | `void **` | Array of element pointers. Items[0..size-1] are valid. Allocated via heap_caps_calloc, reallocated via heap_caps_realloc. |
+| `capacity` | `uint16_t` | Current allocated capacity (number of slots). Grows on insertion - may exceed size after deletions. |
+| `size` | `uint16_t` | Current number of elements (0 ≤ size ≤ capacity). |
+| `unit` | `uint16_t` | Size (in bytes) of a single element. Set once in zh_vector_init() and immutable. |
+| `mutex` | `SemaphoreHandle_t` | FreeRTOS mutex. Created in zh_vector_init(), deleted in zh_vector_free. Automatically locked/unlocked in public functions. |
 
 ---
 
@@ -83,39 +85,44 @@ Initializes the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). If the vector pointer is NULL, memory will be allocated.
 - `unit` - Size of each element in bytes
 
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector or zero unit size)
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or zero unit size)
 - `ESP_ERR_INVALID_STATE` - Vector already initialized
+- `ESP_ERR_NO_MEM` - Memory allocation failed
 
 **Example:**
 
 ```c
-zh_vector_t vector = {0};
-zh_vector_init(&vector, sizeof(int)); // For integers
+zh_vector_t *vector = NULL;
+esp_err_t ret = zh_vector_init(&vector, sizeof(int)); // For integers
+if (ret != ESP_OK) {
+    // Handle error
+}
+// Don't forget to free: zh_vector_free(&vector);
 ```
 
 ---
 
 ### zh_vector_free()
 
-Deinitializes the vector and frees all allocated memory.
+Deinitializes the vector and frees all allocated memory. Sets the vector pointer to NULL.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
 
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector)
-- `ESP_ERR_INVALID_STATE` - Vector not initialized
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or NULL vector)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
-**Note:** All dynamically allocated element memory is also freed.
+**Note:** All dynamically allocated element memory is also freed. The vector pointer is set to NULL after deinitialization.
 
 ---
 
@@ -125,12 +132,14 @@ Gets the current number of elements in the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `size` - Pointer to variable to store the size. Must not be NULL.
 
 **Returns:**
 
-- `>= 0` - Number of elements (success)
-- `ESP_FAIL` - Error (NULL vector or not initialized)
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or size pointer)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
 ---
 
@@ -140,15 +149,15 @@ Adds an element to the beginning of the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
-- `item` - Pointer to the element to add
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `item` - Pointer to the element to add. Must not be NULL.
 
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector or item)
-- `ESP_ERR_INVALID_STATE` - Vector not initialized
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or item pointer)
 - `ESP_ERR_NO_MEM` - Memory allocation failed
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
 **Note:** The function allocates memory for a copy of the item and copies the data. All existing elements are shifted right by one position.
 
@@ -160,15 +169,15 @@ Adds an element to the end of the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
-- `item` - Pointer to the element to add
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `item` - Pointer to the element to add. Must not be NULL.
 
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector or item)
-- `ESP_ERR_INVALID_STATE` - Vector not initialized
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or item pointer)
 - `ESP_ERR_NO_MEM` - Memory allocation failed
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
 **Note:** The function allocates memory for a copy of the item and copies the data.
 
@@ -180,34 +189,35 @@ Changes an element at a specific index.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
-- `index` - Index of the element to change (0-based)
-- `item` - Pointer to the new element data
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `index` - Index of the element to change (0-based). Must be < vector size.
+- `item` - Pointer to the new element data. Must not be NULL.
 
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector, item, or invalid index)
-- `ESP_ERR_INVALID_STATE` - Vector not initialized
-- `ESP_FAIL` - Index out of bounds
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, item pointer, or invalid index)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
 ---
 
 ### zh_vector_get_item()
 
-Gets an element at a specific index.
+Retrieves an element at a specific index by copying it into the user-provided buffer.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
-- `index` - Index of the element to get (0-based)
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `index` - Index of the element to get (0-based).
+- `item` - Pointer to a buffer of at least `unit` bytes where the element will be copied. Must not be NULL.
 
 **Returns:**
 
-- Pointer to the element (success)
-- `NULL` - Error (NULL vector, not initialized, or invalid index)
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, NULL item pointer, or invalid index)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
-**Note:** Returns a pointer to the internal data. Do not free this pointer.
+**Note:** This function copies the element data into the provided buffer. No pointers are returned.
 
 ---
 
@@ -217,17 +227,17 @@ Deletes an element at a specific index and shifts all subsequent elements.
 
 **Parameters:**
 
-- `vector` - Pointer to the vector structure
-- `index` - Index of the element to delete (0-based)
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `index` - Index of the element to delete (0-based). Must be < vector size.
 
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector)
-- `ESP_ERR_INVALID_STATE` - Vector not initialized
-- `ESP_FAIL` - Index out of bounds
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or invalid index)
+- `ESP_ERR_NO_MEM` - Memory allocation failed (during reallocation)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
-**Note:** All elements after the deleted index are shifted left by one position.
+**Note:** All elements after the deleted index are shifted left by one position. The deleted item's memory is freed.
 
 ---
 
@@ -238,35 +248,57 @@ Deletes an element at a specific index and shifts all subsequent elements.
 ```c
 #include "zh_vector.h"
 
-zh_vector_t int_vector = {0};
-
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+
+    zh_vector_t *vector = NULL;
+
     // Initialize vector for integers
-    zh_vector_init(&int_vector, sizeof(int));
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+
     // Add elements
     int val1 = 10;
     int val2 = 20;
     int val3 = 30;
-    zh_vector_push_front(&int_vector, &val1);
-    zh_vector_push_back(&int_vector, &val2);
-    zh_vector_push_back(&int_vector, &val3);
-    printf("Vector size: %d\n", zh_vector_get_size(&int_vector));
-    // Access elements
-    for (int i = 0; i < zh_vector_get_size(&int_vector); i++) {
-        int *item = (int *)zh_vector_get_item(&int_vector, i);
-        printf("Element %d: %d\n", i, *item);
+    zh_vector_push_front(&vector, &val1);
+    zh_vector_push_back(&vector, &val2);
+    zh_vector_push_back(&vector, &val3);
+
+    size_t size;
+    ret = zh_vector_get_size(&vector, &size);
+    if (ret == ESP_OK) {
+        printf("Vector size: %zu\n", size);
     }
+
+    // Access elements
+    for (int i = 0; i < size; i++) {
+        int item_value;
+        esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, &item_value);
+        if (err == ESP_OK) {
+            printf("Element %d: %d\n", i, item_value);
+        } else {
+            printf("Error getting element %d: %s\n", i, esp_err_to_name(err));
+        }
+    }
+
     // Change element
     int new_val = 100;
-    zh_vector_change_item(&int_vector, 1, &new_val);
+    zh_vector_change_item(&vector, 1, &new_val);
+
     // Delete element
-    zh_vector_delete_item(&int_vector, 0);
+    zh_vector_delete_item(&vector, 0);
+
     // Cleanup
-    zh_vector_free(&int_vector);
+    zh_vector_free(&vector);
 }
 ```
+
+---
 
 ### Struct Example
 
@@ -279,52 +311,82 @@ typedef struct {
     float value;
 } my_struct_t;
 
-zh_vector_t struct_vector = {0};
-
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+
+    zh_vector_t *vector = NULL;
+
     // Initialize vector for structs
-    zh_vector_init(&struct_vector, sizeof(my_struct_t));
+    esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+
     // Add struct elements
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
-    zh_vector_push_front(&struct_vector, &item1);
-    zh_vector_push_back(&struct_vector, &item2);
+    zh_vector_push_front(&vector, &item1);
+    zh_vector_push_back(&vector, &item2);
+
     // Access and modify
-    my_struct_t *ptr = (my_struct_t *)zh_vector_get_item(&struct_vector, 0);
-    ptr->value = 10.5f;
+    my_struct_t item_value;
+    esp_err_t err = zh_vector_get_item(&vector, 0, &item_value);
+    if (err == ESP_OK) {
+        item_value.value = 10.5f;
+        zh_vector_change_item(&vector, 0, &item_value);
+    }
+
     // Cleanup
-    zh_vector_free(&struct_vector);
+    zh_vector_free(&vector);
 }
 ```
+
+---
 
 ### String Example (Char Arrays)
 
 ```c
 #include "zh_vector.h"
-#include "string.h"
-
-zh_vector_t string_vector = {0};
 
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-    // Initialize vector for strings (100 char max)
+
+    zh_vector_t *vector = NULL;
     char buffer[100] = {0};
-    zh_vector_init(&string_vector, sizeof(buffer));
+
+    // Initialize vector for strings (100 char max)
+    esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+
     // Add strings
     strcpy(buffer, "Hello");
-    zh_vector_push_front(&string_vector, &buffer);
+    zh_vector_push_front(&vector, &buffer);
     strcpy(buffer, "World");
-    zh_vector_push_back(&string_vector, &buffer);
-    // Print all strings
-    for (int i = 0; i < zh_vector_get_size(&string_vector); i++) {
-        char *str = (char *)zh_vector_get_item(&string_vector, i);
-        printf("String %d: %s\n", i, str);
+    zh_vector_push_back(&vector, &buffer);
+
+    size_t size;
+    ret = zh_vector_get_size(&vector, &size);
+    if (ret == ESP_OK) {
+        // Print all strings
+        for (int i = 0; i < size; i++) {
+            char str_value[100];
+            esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, str_value);
+            if (err == ESP_OK) {
+                printf("String %d: %s\n", i, str_value);
+            } else {
+                printf("Error getting string %d: %s\n", i, esp_err_to_name(err));
+            }
+        }
     }
+
     // Cleanup
-    zh_vector_free(&string_vector);
+    zh_vector_free(&vector);
 }
 ```
 
@@ -351,9 +413,8 @@ void app_main(void)
 |------------|-------------|
 | `ESP_OK` | Operation successful |
 | `ESP_ERR_INVALID_ARG` | Invalid argument (NULL pointer or zero size) |
-| `ESP_ERR_INVALID_STATE` | Vector not initialized or already initialized |
+| `ESP_ERR_INVALID_STATE` | Failed to acquire mutex (rare system error) |
 | `ESP_ERR_NO_MEM` | Memory allocation failed (out of memory) |
-| `ESP_FAIL` | General failure (e.g., index out of bounds) |
 
 ---
 
@@ -405,4 +466,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v1.3.0*
+*Generated for zh_vector v2.0.0*

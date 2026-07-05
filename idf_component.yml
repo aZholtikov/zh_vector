@@ -1,6 +1,6 @@
 description: ESP32 ESP-IDF component for vector (dynamic array)
 url: https://github.com/aZholtikov/zh_vector
-version: "1.3.0"
+version: "2.0.0"
 license: "Apache-2.0"
 maintainers:
   - "Alexey Zholtikov <alexey.zholtikov@yandex.ru>"

@@ -111,7 +111,7 @@ esp_err_t zh_vector_get_size(zh_vector_t **vector, uint16_t *size)
     return ESP_OK;
 }
 
-esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item)
+esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item) // -V2008
 {
     ZH_LOGI("Adding item to beginning of vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to beginning of vector failed. Invalid argument.");
@@ -135,7 +135,7 @@ esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item)
     return ESP_OK;
 }
 
-esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item)
+esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item) // -V2008
 {
     ZH_LOGI("Adding item to vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to vector failed. Invalid argument.");
@@ -156,7 +156,7 @@ esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item)
     return ESP_OK;
 }
 
-esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void *item)
+esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void *item) // -V2008
 {
     ZH_LOGI("Changing item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Changing item in vector failed. Invalid argument.");
@@ -169,7 +169,7 @@ esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void
     return ESP_OK;
 }
 
-esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item)
+esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item) // -V2008
 {
     ZH_LOGI("Getting item from vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Getting item from vector failed. Invalid argument.");
@@ -182,7 +182,7 @@ esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item)
     return ESP_OK;
 }
 
-esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index)
+esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index) // -V2008
 {
     ZH_LOGI("Deleting item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector failed. Invalid argument.");

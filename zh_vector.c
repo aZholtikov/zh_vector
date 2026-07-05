@@ -111,6 +111,17 @@ esp_err_t zh_vector_get_size(zh_vector_t **vector, uint16_t *size)
     return ESP_OK;
 }
 
+esp_err_t zh_vector_get_capacity(zh_vector_t **vector, uint16_t *capacity)
+{
+    ZH_LOGI("Getting vector capacity begin.");
+    ZH_ERROR_CHECK(vector != NULL && *vector != NULL && capacity != NULL, ESP_ERR_INVALID_ARG, NULL, "Getting vector capacity failed. Invalid argument.");
+    ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Getting vector capacity failed. Failed to acquire mutex.");
+    *capacity = (*vector)->capacity;
+    xSemaphoreGive((*vector)->mutex);
+    ZH_LOGI("Getting vector capacity success.");
+    return ESP_OK;
+}
+
 esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item) // -V2008
 {
     ZH_LOGI("Adding item to beginning of vector begin.");

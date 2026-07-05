@@ -126,6 +126,25 @@ Deinitializes the vector and frees all allocated memory. Sets the vector pointer
 
 ---
 
+### zh_vector_get_capacity()
+
+Gets the current allocated capacity of the vector (maximum number of elements without reallocation).
+
+**Parameters:**
+
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `capacity` - Pointer to variable to store the capacity. Must not be NULL.
+
+**Returns:**
+
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or capacity pointer)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+
+**Note:** Capacity may be larger than the current size (e.g., after deletions), and is reduced lazily when size < capacity/2 (or when size becomes 0).
+
+---
+
 ### zh_vector_get_size()
 
 Gets the current number of elements in the vector.

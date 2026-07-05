@@ -80,6 +80,23 @@ extern "C"
     esp_err_t zh_vector_get_size(zh_vector_t **vector, uint16_t *size);
 
     /**
+     * @brief Gets the current allocated capacity (maximum number of elements without reallocation).
+     *
+     * @note Thread-safe: internally locks/unlocks the mutex.
+     * @note Capacity may be larger than the current size (e.g., after deletions), and is reduced
+     *       lazily via _resize() only when size < capacity/2 (or when size becomes 0).
+     * @note When the vector is empty (size == 0), capacity is guaranteed to be 0.
+     *
+     * @param[in] vector Double pointer to vector structure (`zh_vector_t **`). Must not be `NULL`.
+     * @param[out] capacity Pointer to store the allocated capacity. Must not be `NULL`.
+     *
+     * @return ESP_OK on success.
+     * @return ESP_ERR_INVALID_ARG if `vector == NULL`, `capacity == NULL`, or `*vector == NULL` (not initialized).
+     * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired (rare, indicates a system error).
+     */
+    esp_err_t zh_vector_get_capacity(zh_vector_t **vector, uint16_t *capacity);
+
+    /**
      * @brief Adds a copy of the item to the beginning of the vector.
      *
      * A copy of `item` is allocated on the heap and stored in the vector.

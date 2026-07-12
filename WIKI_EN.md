@@ -439,7 +439,7 @@ void app_main(void)
     zh_vector_push_back(&vector, &val3);
     zh_vector_push_back(&vector, &val4);
     zh_vector_push_back(&vector, &val5);
-    size_t size;
+    uint16_t size;
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK) {
         printf("Vector size before removing duplicates: %zu\n", size);

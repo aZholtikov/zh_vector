@@ -72,7 +72,7 @@ git clone https://github.com/aZholtikov/zh_vector
 | Поле | Тип | Описание |
 |------|-----|----------|
 | `items` | `void **` | Массив указателей на элементы вектора. Items[0..size-1] являются валидными. Выделяется через heap_caps_calloc, перераспределяется через heap_caps_realloc. |
-| `capacity` | `uint16_t` | Текущая выделенная емкость (количество слотов). Увеличивается при вставке — может превышать size после удалений. |
+| `capacity` | `uint16_t` | Текущая выделенная емкость (количество слотов). Увеличивае��ся при вставке — может превышать size после удалений. |
 | `size` | `uint16_t` | Текущее количество элементов (0 ≤ size ≤ capacity). |
 | `unit` | `uint16_t` | Размер (в байтах) одного элемента. Устанавливается при инициализации и не должен меняться. |
 | `mutex` | `SemaphoreHandle_t` | FreeRTOS mutex. Создается в zh_vector_init, удаляется в zh_vector_free. Автоматически блокируется/разблокируется в публичных функциях. |
@@ -260,6 +260,24 @@ if (ret != ESP_OK) {
 
 ---
 
+### zh_vector_remove_duplicates()
+
+Удаляет дублирующиеся элементы из вектора, оставляя только первое вхождение каждого элемента.
+
+**Параметры:**
+
+- `vector` - Указатель на указатель на структуру вектора (`zh_vector_t **`). Не должен быть NULL.
+
+**Возвращает:**
+
+- `ESP_OK` - Успех
+- `ESP_ERR_INVALID_ARG` - Неверный аргумент (NULL указатель на указатель на вектор или NULL указатель на вектор)
+- `ESP_ERR_INVALID_STATE` - Не удалось захватить mutex (редкий системный сбой)
+
+**Примечание:** Использует memcmp для сравнения элементов. Сохраняется только первое вхождение каждого уникального элемента. Функция сохраняет порядок первых вхождений.
+
+---
+
 ## Примеры использования
 
 ### Базовый пример: Вектор целых чисел
@@ -270,16 +288,13 @@ if (ret != ESP_OK) {
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-
     zh_vector_t *vector = NULL;
-
     // Инициализация вектора для целых чисел
     esp_err_t ret = zh_vector_init(&vector, sizeof(int));
     if (ret != ESP_OK) {
         printf("Ошибка инициализации вектора\n");
         return;
     }
-
     // Добавление элементов
     int val1 = 10;
     int val2 = 20;
@@ -287,13 +302,11 @@ void app_main(void)
     zh_vector_push_front(&vector, &val1);
     zh_vector_push_back(&vector, &val2);
     zh_vector_push_back(&vector, &val3);
-
     size_t size;
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK) {
         printf("Размер вектора: %zu\n", size);
     }
-
     // Доступ к элементам
     for (int i = 0; i < size; i++) {
         int item_value;
@@ -304,14 +317,11 @@ void app_main(void)
             printf("Ошибка получения элемента %d: %s\n", i, esp_err_to_name(err));
         }
     }
-
     // Изменение элемента
     int new_val = 100;
     zh_vector_change_item(&vector, 1, &new_val);
-
     // Удаление элемента
     zh_vector_delete_item(&vector, 0);
-
     // Очистка
     zh_vector_free(&vector);
 }
@@ -333,22 +343,18 @@ typedef struct {
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-
     zh_vector_t *vector = NULL;
-
     // Инициализация вектора для структур
     esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
     if (ret != ESP_OK) {
         printf("Ошибка инициализации вектора\n");
         return;
     }
-
     // Добавление элементов-структур
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
     zh_vector_push_front(&vector, &item1);
     zh_vector_push_back(&vector, &item2);
-
     // Доступ и модификация
     my_struct_t item_value;
     esp_err_t err = zh_vector_get_item(&vector, 0, &item_value);
@@ -356,7 +362,6 @@ void app_main(void)
         item_value.value = 10.5f;
         zh_vector_change_item(&vector, 0, &item_value);
     }
-
     // Очистка
     zh_vector_free(&vector);
 }
@@ -372,23 +377,19 @@ void app_main(void)
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-
     zh_vector_t *vector = NULL;
     char buffer[100] = {0};
-
     // Инициализация вектора для строк (макс. 100 символов)
     esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
     if (ret != ESP_OK) {
         printf("Ошибка инициализации вектора\n");
         return;
     }
-
     // Добавление строк
     strcpy(buffer, "Привет");
     zh_vector_push_front(&vector, &buffer);
     strcpy(buffer, "Мир");
     zh_vector_push_back(&vector, &buffer);
-
     size_t size;
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK) {
@@ -403,7 +404,62 @@ void app_main(void)
             }
         }
     }
+    // Удаление дубликатов (если есть)
+    zh_vector_remove_duplicates(&vector);
+    // Очистка
+    zh_vector_free(&vector);
+}
+```
 
+---
+
+### Пример удаления дубликатов
+
+```c
+#include "zh_vector.h"
+
+void app_main(void)
+{
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    zh_vector_t *vector = NULL;
+    // Инициализация вектора для целых чисел
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Ошибка инициализации вектора\n");
+        return;
+    }
+    // Добавление элементов с дубликатами
+    int val1 = 10;
+    int val2 = 20;
+    int val3 = 10;
+    int val4 = 30;
+    int val5 = 20;
+    zh_vector_push_back(&vector, &val1);
+    zh_vector_push_back(&vector, &val2);
+    zh_vector_push_back(&vector, &val3);
+    zh_vector_push_back(&vector, &val4);
+    zh_vector_push_back(&vector, &val5);
+    size_t size;
+    ret = zh_vector_get_size(&vector, &size);
+    if (ret == ESP_OK) {
+        printf("Размер вектора перед удалением дубликатов: %zu\n", size);
+    }
+    // Удаление дубликатов
+    zh_vector_remove_duplicates(&vector);
+    ret = zh_vector_get_size(&vector, &size);
+    if (ret == ESP_OK) {
+        printf("Размер вектора после удаления дубликатов: %zu\n", size);
+    }
+    // Доступ к оставшимся элементам
+    for (int i = 0; i < size; i++) {
+        int item_value;
+        esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, &item_value);
+        if (err == ESP_OK) {
+            printf("Элемент %d: %d\n", i, item_value);
+        } else {
+            printf("Ошибка получения элемента %d: %s\n", i, esp_err_to_name(err));
+        }
+    }
     // Очистка
     zh_vector_free(&vector);
 }
@@ -485,4 +541,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v2.0.0*
+*Сгенерировано для zh_vector v2.2.0*

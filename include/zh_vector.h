@@ -54,6 +54,11 @@ extern "C"
      *
      * Frees all item copies, the internal pointer array, and the mutex. Sets `*vector` to `NULL` before returning.
      *
+     * @warning This function is NOT thread-safe. It must not be called concurrently with any other vector operation
+     *          from different tasks or interrupts. The caller is responsible for ensuring that all other accesses to
+     *          the vector have completed before invoking `zh_vector_free`. In a multi‑tasking environment, use an external
+     *          mutex to protect the vector's lifecycle if concurrent calls are possible.
+     *
      * @warning After this call, all previously obtained item pointers become invalid.
      * @note Safe to call with `vector == NULL` or `*vector == NULL` (returns `ESP_OK`).
      *
@@ -185,6 +190,26 @@ extern "C"
      * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired (rare, indicates a system error).
      */
     esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index);
+
+    /**
+     * @brief Removes duplicate items from the vector, keeping only the first occurrence of each value.
+     *
+     * The function compares items byte-by-byte using `memcmp(..., unit)`. All elements that are equal
+     * to a previously seen element are deleted. The relative order of the remaining elements is preserved.
+     *
+     * @note This operation is O(n^2) in the worst case and may be slow for large vectors.
+     * @note Memory of duplicate elements is freed, and the vector capacity may be reduced if the size drops
+     *       below half of the capacity (same as in zh_vector_delete_item).
+     * @note Thread-safe: internally locks/unlocks the mutex.
+     *
+     * @param[in,out] vector Double pointer to vector structure (`zh_vector_t **`). Must not be `NULL`.
+     *
+     * @return ESP_OK on success.
+     * @return ESP_ERR_INVALID_ARG if `vector == NULL` or `*vector == NULL` (not initialized).
+     * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired (rare, indicates a system error).
+     * @return ESP_ERR_NO_MEM if memory allocation fails during capacity reduction.
+     */
+    esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector);
 
 #ifdef __cplusplus
 }

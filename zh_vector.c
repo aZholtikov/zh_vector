@@ -56,6 +56,7 @@ struct _zh_vector_t
 };
 
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity);
+static esp_err_t _delete(zh_vector_t *vector, uint16_t index);
 static inline uint16_t _calc_new_capacity(uint16_t current);
 
 esp_err_t zh_vector_init(zh_vector_t **vector, uint16_t unit) // -V2008
@@ -199,33 +200,46 @@ esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index) // -V2008
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector failed. Invalid argument.");
     ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Deleting item in vector failed. Failed to acquire mutex.");
     ZH_ERROR_CHECK(index < (*vector)->size, ESP_ERR_INVALID_ARG, xSemaphoreGive((*vector)->mutex), "Deleting item in vector failed. Index out of bounds.");
-    uint16_t last_idx = (*vector)->size - 1;
-    void *freed_item = (*vector)->items[index];
-    if (index != last_idx)
-    {
-        for (uint16_t i = index; i < last_idx; ++i)
-        {
-            (*vector)->items[i] = (*vector)->items[i + 1];
-        }
-    }
-    (*vector)->items[last_idx] = NULL;
-    heap_caps_free(freed_item);
-    --(*vector)->size;
-    if ((*vector)->size > 0 && (*vector)->capacity / 2 > (*vector)->size)
-    {
-        ZH_ERROR_CHECK(_resize(*vector, (*vector)->size) == ESP_OK, ESP_ERR_NO_MEM, xSemaphoreGive((*vector)->mutex), "Deleting item in vector failed. Memory reallocation failed.");
-    }
-    else if ((*vector)->size == 0 && (*vector)->capacity > 0)
-    {
-        _resize(*vector, 0);
-    }
+    ZH_ERROR_CHECK(_delete(*vector, index) == ESP_OK, ESP_ERR_INVALID_STATE, xSemaphoreGive((*vector)->mutex), "Deleting item in vector failed. Internal error.");
     xSemaphoreGive((*vector)->mutex);
     ZH_LOGI("Deleting item in vector success.");
     return ESP_OK;
 }
 
+esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector) // -V2008
+{
+    ZH_LOGI("Removing duplicates from vector begin.");
+    ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Removing duplicates from vector failed. Invalid argument.");
+    ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Removing duplicates from vector failed. Failed to acquire mutex.");
+    if ((*vector)->size >= 2)
+    {
+        for (uint16_t i = 0; i < (*vector)->size - 1; ++i)
+        {
+            uint16_t j = i + 1;
+            while (j < (*vector)->size)
+            {
+                if (memcmp((*vector)->items[i], (*vector)->items[j], (*vector)->unit) == 0)
+                {
+                    ZH_ERROR_CHECK(_delete(*vector, j) == ESP_OK, ESP_ERR_INVALID_STATE, xSemaphoreGive((*vector)->mutex), "Removing duplicates from vector failed. Internal error.");
+                }
+                else
+                {
+                    ++j;
+                }
+            }
+        }
+    }
+    xSemaphoreGive((*vector)->mutex);
+    ZH_LOGI("Removing duplicates from vector success.");
+    return ESP_OK;
+}
+
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
 {
+    if (capacity < vector->size)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
     if (capacity == 0)
     {
         if (vector->items != NULL)
@@ -251,6 +265,35 @@ static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
         memset(vector->items + old_capacity, 0, sizeof(void *) * (capacity - old_capacity));
     }
     vector->capacity = capacity;
+    return ESP_OK;
+}
+
+static esp_err_t _delete(zh_vector_t *vector, uint16_t index)
+{
+    if (index >= vector->size)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
+    void *freed_item = vector->items[index];
+    uint16_t last_idx = vector->size - 1;
+    if (index != last_idx)
+    {
+        for (uint16_t i = index; i < last_idx; ++i)
+        {
+            vector->items[i] = vector->items[i + 1];
+        }
+    }
+    vector->items[last_idx] = NULL;
+    heap_caps_free(freed_item);
+    --vector->size;
+    if (vector->size > 0 && vector->capacity / 2 > vector->size)
+    {
+        return _resize(vector, vector->size);
+    }
+    else if (vector->size == 0 && vector->capacity > 0)
+    {
+        _resize(vector, 0);
+    }
     return ESP_OK;
 }
 

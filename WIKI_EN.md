@@ -260,6 +260,24 @@ Deletes an element at a specific index and shifts all subsequent elements.
 
 ---
 
+### zh_vector_remove_duplicates()
+
+Removes duplicate elements from the vector, keeping only the first occurrence of each element.
+
+**Parameters:**
+
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+
+**Returns:**
+
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or NULL vector)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+
+**Note:** Uses memcmp to compare elements. Only the first occurrence of each unique element is preserved. The function preserves the order of first occurrences.
+
+---
+
 ## Usage Examples
 
 ### Basic Example: Integer Vector
@@ -270,16 +288,13 @@ Deletes an element at a specific index and shifts all subsequent elements.
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-
     zh_vector_t *vector = NULL;
-
     // Initialize vector for integers
     esp_err_t ret = zh_vector_init(&vector, sizeof(int));
     if (ret != ESP_OK) {
         printf("Vector initialization error\n");
         return;
     }
-
     // Add elements
     int val1 = 10;
     int val2 = 20;
@@ -287,13 +302,11 @@ void app_main(void)
     zh_vector_push_front(&vector, &val1);
     zh_vector_push_back(&vector, &val2);
     zh_vector_push_back(&vector, &val3);
-
     size_t size;
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK) {
         printf("Vector size: %zu\n", size);
     }
-
     // Access elements
     for (int i = 0; i < size; i++) {
         int item_value;
@@ -304,14 +317,11 @@ void app_main(void)
             printf("Error getting element %d: %s\n", i, esp_err_to_name(err));
         }
     }
-
     // Change element
     int new_val = 100;
     zh_vector_change_item(&vector, 1, &new_val);
-
     // Delete element
     zh_vector_delete_item(&vector, 0);
-
     // Cleanup
     zh_vector_free(&vector);
 }
@@ -333,22 +343,18 @@ typedef struct {
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-
     zh_vector_t *vector = NULL;
-
     // Initialize vector for structs
     esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
     if (ret != ESP_OK) {
         printf("Vector initialization error\n");
         return;
     }
-
     // Add struct elements
     my_struct_t item1 = {1, "Item 1", 1.5f};
     my_struct_t item2 = {2, "Item 2", 2.5f};
     zh_vector_push_front(&vector, &item1);
     zh_vector_push_back(&vector, &item2);
-
     // Access and modify
     my_struct_t item_value;
     esp_err_t err = zh_vector_get_item(&vector, 0, &item_value);
@@ -356,7 +362,6 @@ void app_main(void)
         item_value.value = 10.5f;
         zh_vector_change_item(&vector, 0, &item_value);
     }
-
     // Cleanup
     zh_vector_free(&vector);
 }
@@ -372,23 +377,19 @@ void app_main(void)
 void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
-
     zh_vector_t *vector = NULL;
     char buffer[100] = {0};
-
     // Initialize vector for strings (100 char max)
     esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
     if (ret != ESP_OK) {
         printf("Vector initialization error\n");
         return;
     }
-
     // Add strings
     strcpy(buffer, "Hello");
     zh_vector_push_front(&vector, &buffer);
     strcpy(buffer, "World");
     zh_vector_push_back(&vector, &buffer);
-
     size_t size;
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK) {
@@ -403,7 +404,62 @@ void app_main(void)
             }
         }
     }
+    // Remove duplicates (if any)
+    zh_vector_remove_duplicates(&vector);
+    // Cleanup
+    zh_vector_free(&vector);
+}
+```
 
+---
+
+### Remove Duplicates Example
+
+```c
+#include "zh_vector.h"
+
+void app_main(void)
+{
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    zh_vector_t *vector = NULL;
+    // Initialize vector for integers
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+    // Add elements with duplicates
+    int val1 = 10;
+    int val2 = 20;
+    int val3 = 10;
+    int val4 = 30;
+    int val5 = 20;
+    zh_vector_push_back(&vector, &val1);
+    zh_vector_push_back(&vector, &val2);
+    zh_vector_push_back(&vector, &val3);
+    zh_vector_push_back(&vector, &val4);
+    zh_vector_push_back(&vector, &val5);
+    size_t size;
+    ret = zh_vector_get_size(&vector, &size);
+    if (ret == ESP_OK) {
+        printf("Vector size before removing duplicates: %zu\n", size);
+    }
+    // Remove duplicates
+    zh_vector_remove_duplicates(&vector);
+    ret = zh_vector_get_size(&vector, &size);
+    if (ret == ESP_OK) {
+        printf("Vector size after removing duplicates: %zu\n", size);
+    }
+    // Access remaining elements
+    for (int i = 0; i < size; i++) {
+        int item_value;
+        esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, &item_value);
+        if (err == ESP_OK) {
+            printf("Element %d: %d\n", i, item_value);
+        } else {
+            printf("Error getting element %d: %s\n", i, esp_err_to_name(err));
+        }
+    }
     // Cleanup
     zh_vector_free(&vector);
 }
@@ -485,4 +541,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v2.0.0*
+*Generated for zh_vector v2.2.0*

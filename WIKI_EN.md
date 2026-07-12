@@ -260,6 +260,27 @@ Deletes an element at a specific index and shifts all subsequent elements.
 
 ---
 
+### zh_vector_find_item()
+
+Finds the first occurrence of an element in the vector.
+
+**Parameters:**
+
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `item` - Pointer to the element to find. Must not be NULL.
+- `index` - Pointer to variable to store the found index. Will be set to -1 if element is not found. Must not be NULL.
+
+**Returns:**
+
+- `ESP_OK` - Success (element found)
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, NULL item pointer, or NULL index pointer)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+- `ESP_ERR_NOT_FOUND` - Element not found (index set to -1)
+
+**Note:** Uses memcmp to compare elements. Returns the index of the first occurrence. The index variable is set to -1 if the element is not found.
+
+---
+
 ### zh_vector_remove_duplicates()
 
 Removes duplicate elements from the vector, keeping only the first occurrence of each element.
@@ -467,6 +488,53 @@ void app_main(void)
 
 ---
 
+### Find Item Example
+
+```c
+#include "zh_vector.h"
+
+void app_main(void)
+{
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    zh_vector_t *vector = NULL;
+    // Initialize vector for integers
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+    // Add elements
+    int val1 = 10;
+    int val2 = 20;
+    int val3 = 30;
+    zh_vector_push_back(&vector, &val1);
+    zh_vector_push_back(&vector, &val2);
+    zh_vector_push_back(&vector, &val3);
+    // Find element
+    int search_item = 20;
+    int16_t found_index = -1;
+    ret = zh_vector_find_item(&vector, &search_item, &found_index);
+    if (ret == ESP_OK) {
+        printf("Element %d found at index %d\n", search_item, found_index);
+    } else {
+        printf("Element %d not found (index=%d)\n", search_item, found_index);
+    }
+    // Find non-existing element
+    search_item = 100;
+    found_index = -1;
+    ret = zh_vector_find_item(&vector, &search_item, &found_index);
+    if (ret == ESP_OK) {
+        printf("Element %d found at index %d\n", search_item, found_index);
+    } else {
+        printf("Element %d not found (index=%d)\n", search_item, found_index);
+    }
+    // Cleanup
+    zh_vector_free(&vector);
+}
+```
+
+---
+
 ## Technical Specifications
 
 | Parameter | Value |
@@ -490,6 +558,7 @@ void app_main(void)
 | `ESP_ERR_INVALID_ARG` | Invalid argument (NULL pointer or zero size) |
 | `ESP_ERR_INVALID_STATE` | Failed to acquire mutex (rare system error) |
 | `ESP_ERR_NO_MEM` | Memory allocation failed (out of memory) |
+| `ESP_ERR_NOT_FOUND` | Element not found (for zh_vector_find_item) |
 
 ---
 
@@ -541,4 +610,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v2.2.0*
+*Generated for zh_vector v2.3.0*

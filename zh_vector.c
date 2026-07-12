@@ -234,6 +234,27 @@ esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector) // -V2008
     return ESP_OK;
 }
 
+esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *index)
+{
+    ZH_LOGI("Finding item in vector begin.");
+    ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL && index != NULL, ESP_ERR_INVALID_ARG, NULL, "Finding item in vector failed. Invalid argument.");
+    ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Finding item in vector failed. Failed to acquire mutex.");
+    *index = -1;
+    for (uint16_t i = 0; i < (*vector)->size; ++i)
+    {
+        if (memcmp((*vector)->items[i], item, (*vector)->unit) == 0)
+        {
+            *index = (int16_t)i;
+            xSemaphoreGive((*vector)->mutex);
+            ZH_LOGI("Finding item in vector success (found).");
+            return ESP_OK;
+        }
+    }
+    xSemaphoreGive((*vector)->mutex);
+    ZH_LOGI("Finding item in vector success (not found).");
+    return ESP_ERR_NOT_FOUND;
+}
+
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
 {
     if (capacity < vector->size)

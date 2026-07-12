@@ -211,6 +211,27 @@ extern "C"
      */
     esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector);
 
+    /**
+     * @brief Searches for an item equal to the given data in the vector.
+     *
+     * Compares the provided item with each element in the vector using `memcmp`.
+     * If a match is found, its index (0‑based) is written to `*index` and `ESP_OK` is returned.
+     * If no match is found, `*index` is set to `-1` and `ESP_ERR_NOT_FOUND` is returned.
+     *
+     * @note Thread-safe: internally locks/unlocks the mutex.
+     * @note The search is linear O(n).
+     *
+     * @param[in] vector Double pointer to vector structure (`zh_vector_t **`). Must not be `NULL`.
+     * @param[in] item Pointer to the data to search for. Must not be `NULL`.
+     * @param[out] index Pointer to store the found index (0‑based) or `-1` if not found. Must not be `NULL`.
+     *
+     * @return ESP_OK if the item is found.
+     * @return ESP_ERR_NOT_FOUND if the item is not present in the vector.
+     * @return ESP_ERR_INVALID_ARG if any pointer argument is `NULL` or `*vector == NULL` (not initialized).
+     * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired (rare, system error).
+     */
+    esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *index);
+
 #ifdef __cplusplus
 }
 #endif

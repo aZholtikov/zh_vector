@@ -63,7 +63,7 @@ git clone https://github.com/aZholtikov/zh_vector
 
 Все функции в этой библиотеке используют double pointer (`zh_vector_t **`) для параметра вектора, чтобы обеспечить правильное управление памятью и потокобезопасные операции.
 
-### Структура zh_vector_t
+### zh_vector_t Structure
 
 Структура объявляется как `typedef struct _zh_vector_t zh_vector_t;` и инкапсулирует внутренние детали реализации.
 
@@ -72,7 +72,7 @@ git clone https://github.com/aZholtikov/zh_vector
 | Поле | Тип | Описание |
 |------|-----|----------|
 | `items` | `void **` | Массив указателей на элементы вектора. Items[0..size-1] являются валидными. Выделяется через heap_caps_calloc, перераспределяется через heap_caps_realloc. |
-| `capacity` | `uint16_t` | Текущая выделенная емкость (количество слотов). Увеличивае��ся при вставке — может превышать size после удалений. |
+| `capacity` | `uint16_t` | Текущая выделенная емкость (количество слотов). Увеличивается при вставке — может превышать size после удалений. |
 | `size` | `uint16_t` | Текущее количество элементов (0 ≤ size ≤ capacity). |
 | `unit` | `uint16_t` | Размер (в байтах) одного элемента. Устанавливается при инициализации и не должен меняться. |
 | `mutex` | `SemaphoreHandle_t` | FreeRTOS mutex. Создается в zh_vector_init, удаляется в zh_vector_free. Автоматически блокируется/разблокируется в публичных функциях. |
@@ -257,6 +257,27 @@ if (ret != ESP_OK) {
 - `ESP_ERR_INVALID_STATE` - Не удалось захватить mutex (редкий системный сбой)
 
 **Примечание:** Все элементы после удаляемого индекса сдвигаются влево на одну позицию. Память удаленного элемента освобождается.
+
+---
+
+### zh_vector_find_item()
+
+Находит первое вхождение элемента в векторе.
+
+**Параметры:**
+
+- `vector` - Указатель на указатель на структуру вектора (`zh_vector_t **`). Не должен быть NULL.
+- `item` - Указатель на элемент для поиска. Не должен быть NULL.
+- `index` - Указатель на переменную для сохранения найденного индекса. Будет установлен в -1, если элемент не найден. Не должен быть NULL.
+
+**Возвращает:**
+
+- `ESP_OK` - Успех (элемент найден)
+- `ESP_ERR_INVALID_ARG` - Неверный аргумент (NULL указатель на вектор, NULL указатель item или NULL указатель index)
+- `ESP_ERR_INVALID_STATE` - Не удалось захватить mutex (редкий системный сбой)
+- `ESP_ERR_NOT_FOUND` - Элемент не найден (index установлен в -1)
+
+**Примечание:** Использует memcmp для сравнения элементов. Возвращает индекс первого вхождения. Переменная index устанавливается в -1, если элемент не найден.
 
 ---
 
@@ -467,6 +488,53 @@ void app_main(void)
 
 ---
 
+### Пример поиска элемента
+
+```c
+#include "zh_vector.h"
+
+void app_main(void)
+{
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    zh_vector_t *vector = NULL;
+    // Инициализация вектора для целых чисел
+    esp_err_t ret = zh_vector_init(&vector, sizeof(int));
+    if (ret != ESP_OK) {
+        printf("Ошибка инициализации вектора\n");
+        return;
+    }
+    // Добавление элементов
+    int val1 = 10;
+    int val2 = 20;
+    int val3 = 30;
+    zh_vector_push_back(&vector, &val1);
+    zh_vector_push_back(&vector, &val2);
+    zh_vector_push_back(&vector, &val3);
+    // Поиск элемента
+    int search_item = 20;
+    int16_t found_index = -1;
+    ret = zh_vector_find_item(&vector, &search_item, &found_index);
+    if (ret == ESP_OK) {
+        printf("Элемент %d найден по индексу %d\n", search_item, found_index);
+    } else {
+        printf("Элемент %d не найден (index=%d)\n", search_item, found_index);
+    }
+    // Поиск несуществующего элемента
+    search_item = 100;
+    found_index = -1;
+    ret = zh_vector_find_item(&vector, &search_item, &found_index);
+    if (ret == ESP_OK) {
+        printf("Элемент %d найден по индексу %d\n", search_item, found_index);
+    } else {
+        printf("Элемент %d не найден (index=%d)\n", search_item, found_index);
+    }
+    // Очистка
+    zh_vector_free(&vector);
+}
+```
+
+---
+
 ## Технические характеристики
 
 | Параметр | Значение |
@@ -490,6 +558,7 @@ void app_main(void)
 | `ESP_ERR_INVALID_ARG` | Неверный аргумент (NULL указатель или нулевой размер) |
 | `ESP_ERR_INVALID_STATE` | Не удалось захватить mutex (редкий системный сбой) |
 | `ESP_ERR_NO_MEM` | Ошибка выделения памяти (не хватает памяти) |
+| `ESP_ERR_NOT_FOUND` | Элемент не найден (для zh_vector_find_item) |
 
 ---
 
@@ -541,4 +610,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v2.2.0*
+*Сгенерировано для zh_vector v2.3.0*

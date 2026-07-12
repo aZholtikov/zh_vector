@@ -13,6 +13,14 @@ static const char *TAG = "zh_vector";
         return err;                                  \
     }
 
+#define ZH_ERROR_CHECK_VOID(cond, cleanup, msg, ...) \
+    if (!(cond))                                     \
+    {                                                \
+        ZH_LOGE(msg, 0, ##__VA_ARGS__);              \
+        cleanup;                                     \
+        return;                                      \
+    }
+
 /**
  * @brief Internal representation of a thread-safe, dynamically resizing vector of *copied* elements.
  *
@@ -257,10 +265,7 @@ esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *i
 
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
 {
-    if (capacity < vector->size)
-    {
-        return ESP_ERR_INVALID_ARG;
-    }
+    ZH_ERROR_CHECK(capacity >= vector->size, ESP_ERR_INVALID_ARG, NULL, "Invalid argument.");
     if (capacity == 0)
     {
         if (vector->items != NULL)
@@ -291,10 +296,7 @@ static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
 
 static esp_err_t _delete(zh_vector_t *vector, uint16_t index)
 {
-    if (index >= vector->size)
-    {
-        return ESP_ERR_INVALID_ARG;
-    }
+    ZH_ERROR_CHECK(index < vector->size, ESP_ERR_INVALID_ARG, NULL, "Invalid argument.");
     void *freed_item = vector->items[index];
     uint16_t last_idx = vector->size - 1;
     if (index != last_idx)

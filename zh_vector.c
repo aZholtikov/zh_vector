@@ -16,7 +16,7 @@ static const char *TAG = "zh_vector";
 #define ZH_ERROR_CHECK_VOID(cond, cleanup, msg, ...) \
     if (!(cond))                                     \
     {                                                \
-        ZH_LOGE(msg, 0, ##__VA_ARGS__);              \
+        ZH_LOGE(msg, ESP_FAIL, ##__VA_ARGS__);       \
         cleanup;                                     \
         return;                                      \
     }

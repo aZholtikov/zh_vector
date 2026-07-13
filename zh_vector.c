@@ -308,6 +308,7 @@ static esp_err_t _delete(zh_vector_t *vector, uint16_t index)
     }
     vector->items[last_idx] = NULL;
     heap_caps_free(freed_item);
+    freed_item = NULL;
     --vector->size;
     if (vector->size > 0 && vector->capacity / 2 > vector->size)
     {

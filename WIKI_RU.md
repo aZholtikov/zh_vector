@@ -63,7 +63,7 @@ git clone https://github.com/aZholtikov/zh_vector
 
 Все функции в этой библиотеке используют double pointer (`zh_vector_t **`) для параметра вектора, чтобы обеспечить правильное управление памятью и потокобезопасные операции.
 
-### zh_vector_t Structure
+### Структура zh_vector_t
 
 Структура объявляется как `typedef struct _zh_vector_t zh_vector_t;` и инкапсулирует внутренние детали реализации.
 

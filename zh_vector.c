@@ -263,6 +263,31 @@ esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *i
     return ESP_ERR_NOT_FOUND;
 }
 
+esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int16_t *index)
+{
+    ZH_LOGI("Finding field in structure begin.");
+    ZH_ERROR_CHECK(vector != NULL && *vector != NULL && sample_struct != NULL && item != NULL && value != NULL && index != NULL && size > 0, ESP_ERR_INVALID_ARG, NULL, "Finding field in structure failed. Invalid argument.");
+    ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Finding field in structure failed. Mutex acquire failed.");
+    ZH_ERROR_CHECK(start < (*vector)->size, ESP_ERR_INVALID_ARG, xSemaphoreGive((*vector)->mutex), "Finding field in structure failed. Start index out of bounds.");
+    size_t offset = (const uint8_t *)item - (const uint8_t *)sample_struct;
+    ZH_ERROR_CHECK((offset + size) <= (*vector)->unit, ESP_ERR_INVALID_ARG, xSemaphoreGive((*vector)->mutex), "Finding field in structure failed. Field exceeds element size.");
+    *index = -1;
+    for (uint16_t i = start; i < (*vector)->size; ++i)
+    {
+        const uint8_t *elem = (const uint8_t *)(*vector)->items[i];
+        if (memcmp(elem + offset, value, size) == 0)
+        {
+            *index = (int16_t)i;
+            xSemaphoreGive((*vector)->mutex);
+            ZH_LOGI("Finding field in structure success (found).");
+            return ESP_OK;
+        }
+    }
+    xSemaphoreGive((*vector)->mutex);
+    ZH_LOGI("Finding field in structure success (not found).");
+    return ESP_ERR_NOT_FOUND;
+}
+
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity)
 {
     ZH_ERROR_CHECK(capacity >= vector->size, ESP_ERR_INVALID_ARG, NULL, "Invalid argument.");

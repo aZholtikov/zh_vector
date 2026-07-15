@@ -281,6 +281,31 @@ if (ret != ESP_OK) {
 
 ---
 
+### zh_vector_find_item_in_field()
+
+Находит первое вхождение значения в определенном поле внутри структур, хранящихся в векторе.
+
+**Параметры:**
+
+- `vector` - Указатель на указатель на структуру вектора (`zh_vector_t **`). Не должен быть NULL.
+- `sample_struct` - Указатель на образец структуры того же типа, что и хранится в векторе. Не должен быть NULL.
+- `field` - Указатель на поле внутри структуры для поиска. Должен быть действительным адресом члена внутри sample_struct.
+- `size` - Размер (в байтах) поля для сравнения. Должен быть > 0.
+- `item` - Указатель на значение для поиска. Не должен быть NULL.
+- `start` - Начальный индекс для поиска (начиная с 0). Должен быть < размера вектора.
+- `index` - Указатель на переменную для сохранения найденного индекса. Будет установлен в -1, если значение не найдено. Не должен быть NULL.
+
+**Возвращает:**
+
+- `ESP_OK` - Успех (значение найдено)
+- `ESP_ERR_INVALID_ARG` - Неверный аргумент (NULL указатель, нулевой размер или неверный начальный индекс)
+- `ESP_ERR_INVALID_STATE` - Не удалось захватить mutex (редкий системный сбой)
+- `ESP_ERR_NOT_FOUND` - Значение не найдено (index установлен в -1)
+
+**Примечание:** Эта функция вычисляет смещение поля внутри структуры, используя sample_struct и item указатели, затем ищет указанное значение в этом поле во всех элементах вектора, начиная с заданного индекса. Использует memcmp для сравнения. Полезно для поиска в векторах структур без копирования всей структуры.
+
+---
+
 ### zh_vector_remove_duplicates()
 
 Удаляет дублирующиеся элементы из вектора, оставляя только первое вхождение каждого элемента.
@@ -406,7 +431,7 @@ void app_main(void)
         printf("Ошибка инициализации вектора\n");
         return;
     }
-    // Добавление строк
+    // Добавление стро��
     strcpy(buffer, "Привет");
     zh_vector_push_front(&vector, &buffer);
     strcpy(buffer, "Мир");
@@ -535,6 +560,67 @@ void app_main(void)
 
 ---
 
+### Пример поиска элемента по полю
+
+```c
+#include "zh_vector.h"
+
+typedef struct {
+    int id;
+    char name[32];
+    float value;
+} my_struct_t;
+
+void app_main(void)
+{
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    zh_vector_t *vector = NULL;
+    // Инициализация вектора для структур
+    esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
+    if (ret != ESP_OK) {
+        printf("Ошибка инициализации вектора\n");
+        return;
+    }
+    // Добавление элементов-структур
+    my_struct_t item1 = {1, "Item 1", 1.5f};
+    my_struct_t item2 = {2, "Item 2", 2.5f};
+    my_struct_t item3 = {3, "Item 3", 3.5f};
+    zh_vector_push_back(&vector, &item1);
+    zh_vector_push_back(&vector, &item2);
+    zh_vector_push_back(&vector, &item3);
+    // Поиск структуры по значению поля (поиск по полю id)
+    int search_id = 2;
+    int16_t found_index = -1;
+    // Вычисление смещения поля 'id' внутри структуры
+    my_struct_t sample;
+    ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
+    if (ret == ESP_OK) {
+        printf("Структура с id=%d найдена по индексу %d\n", search_id, found_index);
+        // Получение найденной структуры
+        my_struct_t found_item;
+        ret = zh_vector_get_item(&vector, (uint16_t)found_index, &found_item);
+        if (ret == ESP_OK) {
+            printf("Найденный элемент: id=%d, name=%s, value=%.1f\n", found_item.id, found_item.name, found_item.value);
+        }
+    } else {
+        printf("Структура с id=%d не найдена (index=%d)\n", search_id, found_index);
+    }
+    // Поиск несуществующего id
+    search_id = 100;
+    found_index = -1;
+    ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
+    if (ret == ESP_OK) {
+        printf("Структура с id=%d найдена по индексу %d\n", search_id, found_index);
+    } else {
+        printf("Структура с id=%d не найдена (index=%d)\n", search_id, found_index);
+    }
+    // Очистка
+    zh_vector_free(&vector);
+}
+```
+
+---
+
 ## Технические характеристики
 
 | Параметр | Значение |
@@ -610,4 +696,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v2.3.0*
+*Сгенерировано для zh_vector v2.4.0*

@@ -281,6 +281,31 @@ Finds the first occurrence of an element in the vector.
 
 ---
 
+### zh_vector_find_item_in_field()
+
+Finds the first occurrence of a value in a specific field within structures stored in the vector.
+
+**Parameters:**
+
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `sample_struct` - Pointer to a sample structure of the same type as stored in the vector. Must not be NULL.
+- `field` - Pointer to the field within the structure to search. Must be a valid member address within sample_struct.
+- `size` - Size (in bytes) of the field to compare. Must be > 0.
+- `item` - Pointer to the value to search for. Must not be NULL.
+- `start` - Starting index for the search (0-based). Must be < vector size.
+- `index` - Pointer to variable to store the found index. Will be set to -1 if value is not found. Must not be NULL.
+
+**Returns:**
+
+- `ESP_OK` - Success (value found)
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL pointer, zero size, or invalid start index)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+- `ESP_ERR_NOT_FOUND` - Value not found (index set to -1)
+
+**Note:** This function calculates the offset of the field within the structure using sample_struct and item pointers, then searches for the specified value in that field across all vector elements starting from the given index. Uses memcmp for comparison. Useful for searching in vectors of structures without copying the entire structure.
+
+---
+
 ### zh_vector_remove_duplicates()
 
 Removes duplicate elements from the vector, keeping only the first occurrence of each element.
@@ -535,6 +560,67 @@ void app_main(void)
 
 ---
 
+### Find Item in Field Example
+
+```c
+#include "zh_vector.h"
+
+typedef struct {
+    int id;
+    char name[32];
+    float value;
+} my_struct_t;
+
+void app_main(void)
+{
+    esp_log_level_set("zh_vector", ESP_LOG_ERROR);
+    zh_vector_t *vector = NULL;
+    // Initialize vector for structs
+    esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
+    if (ret != ESP_OK) {
+        printf("Vector initialization error\n");
+        return;
+    }
+    // Add struct elements
+    my_struct_t item1 = {1, "Item 1", 1.5f};
+    my_struct_t item2 = {2, "Item 2", 2.5f};
+    my_struct_t item3 = {3, "Item 3", 3.5f};
+    zh_vector_push_back(&vector, &item1);
+    zh_vector_push_back(&vector, &item2);
+    zh_vector_push_back(&vector, &item3);
+    // Find struct by field value (searching by id field)
+    int search_id = 2;
+    int16_t found_index = -1;
+    // Calculate offset of 'id' field within the structure
+    my_struct_t sample;
+    ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
+    if (ret == ESP_OK) {
+        printf("Struct with id=%d found at index %d\n", search_id, found_index);
+        // Get the found struct
+        my_struct_t found_item;
+        ret = zh_vector_get_item(&vector, (uint16_t)found_index, &found_item);
+        if (ret == ESP_OK) {
+            printf("Found item: id=%d, name=%s, value=%.1f\n", found_item.id, found_item.name, found_item.value);
+        }
+    } else {
+        printf("Struct with id=%d not found (index=%d)\n", search_id, found_index);
+    }
+    // Find non-existing id
+    search_id = 100;
+    found_index = -1;
+    ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
+    if (ret == ESP_OK) {
+        printf("Struct with id=%d found at index %d\n", search_id, found_index);
+    } else {
+        printf("Struct with id=%d not found (index=%d)\n", search_id, found_index);
+    }
+    // Cleanup
+    zh_vector_free(&vector);
+}
+```
+
+---
+
 ## Technical Specifications
 
 | Parameter | Value |
@@ -610,4 +696,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v2.3.0*
+*Generated for zh_vector v2.4.0*

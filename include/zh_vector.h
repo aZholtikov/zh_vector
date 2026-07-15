@@ -232,6 +232,39 @@ extern "C"
      */
     esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *index);
 
+    /**
+     * @brief Searches for an item in a vector of structures by comparing a specific field.
+     *
+     * This function is intended for vectors that store structures (not primitive types).
+     * It takes a sample structure and a pointer to one of its fields, computes the field offset,
+     * and then scans the vector starting from the given index. For each element, it compares
+     * the bytes of the field with the provided value using `memcmp`. If a match is found,
+     * its index (0‑based) is written to `*index` and `ESP_OK` is returned. If no match is found,
+     * `*index` is set to `-1` and `ESP_ERR_NOT_FOUND` is returned.
+     *
+     * @note The vector must contain elements of a structure type. The `sample_struct` and `field`
+     *       pointers must belong to the same structure definition as the elements stored in the vector.
+     *       The function computes the field offset as `(uint8_t*)field - (uint8_t*)sample_struct`.
+     * @note The `size` parameter must be the exact size in bytes of the field (e.g., `sizeof(sample.id)`). If `size` is 0, the function returns an error.
+     * @note This function is thread-safe: internally locks/unlocks the mutex for the entire search.
+     * @note The search is linear O(n) and starts from the given `start` index to the end.
+     * @note To find all occurrences, call this function repeatedly with an updated `start` index (found index + 1) until `ESP_ERR_NOT_FOUND` is returned.
+     *
+     * @param[in] vector Double pointer to the vector structure (must be initialized).
+     * @param[in] sample_struct Pointer to a sample structure of the same type as stored in the vector. Used only to compute the field offset. The contents are not used.
+     * @param[in] field Pointer to the specific field inside the `sample_struct`.
+     * @param[in] size Size in bytes of the field. Must be > 0.
+     * @param[in] item Pointer to the value to search for in the field.
+     * @param[in] start Index (0‑based) from which to start searching. Must be < vector size.
+     * @param[out] index Pointer to store the found index (0‑based) or `-1` if not found.
+     *
+     * @return ESP_OK if a matching element is found (index is set).
+     * @return ESP_ERR_NOT_FOUND if no element with a matching field value is found.
+     * @return ESP_ERR_INVALID_ARG if any pointer argument is NULL, `*vector` is NULL (not initialized), `size == 0`, `start >= vector size`, or the field extends beyond the element size.
+     * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired.
+     */
+    esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *field, size_t size, const void *item, uint16_t start, int16_t *index);
+
 #ifdef __cplusplus
 }
 #endif

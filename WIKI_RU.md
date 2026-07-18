@@ -337,7 +337,8 @@ void app_main(void)
     zh_vector_t *vector = NULL;
     // Инициализация вектора для целых чисел
     esp_err_t ret = zh_vector_init(&vector, sizeof(int));
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         printf("Ошибка инициализации вектора\n");
         return;
     }
@@ -348,18 +349,23 @@ void app_main(void)
     zh_vector_push_front(&vector, &val1);
     zh_vector_push_back(&vector, &val2);
     zh_vector_push_back(&vector, &val3);
-    size_t size;
+    uint16_t size = 0;
     ret = zh_vector_get_size(&vector, &size);
-    if (ret == ESP_OK) {
+    if (ret == ESP_OK)
+    {
         printf("Размер вектора: %zu\n", size);
     }
     // Доступ к элементам
-    for (int i = 0; i < size; i++) {
-        int item_value;
+    for (int i = 0; i < size; i++)
+    {
+        int item_value = 0;
         esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, &item_value);
-        if (err == ESP_OK) {
+        if (err == ESP_OK)
+        {
             printf("Элемент %d: %d\n", i, item_value);
-        } else {
+        }
+        else
+        {
             printf("Ошибка получения элемента %d: %s\n", i, esp_err_to_name(err));
         }
     }
@@ -380,7 +386,8 @@ void app_main(void)
 ```c
 #include "zh_vector.h"
 
-typedef struct {
+typedef struct
+{
     int id;
     char name[32];
     float value;
@@ -392,7 +399,8 @@ void app_main(void)
     zh_vector_t *vector = NULL;
     // Инициализация вектора для структур
     esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         printf("Ошибка инициализации вектора\n");
         return;
     }
@@ -402,9 +410,10 @@ void app_main(void)
     zh_vector_push_front(&vector, &item1);
     zh_vector_push_back(&vector, &item2);
     // Доступ и модификация
-    my_struct_t item_value;
+    my_struct_t item_value = {0};
     esp_err_t err = zh_vector_get_item(&vector, 0, &item_value);
-    if (err == ESP_OK) {
+    if (err == ESP_OK)
+    {
         item_value.value = 10.5f;
         zh_vector_change_item(&vector, 0, &item_value);
     }
@@ -427,25 +436,31 @@ void app_main(void)
     char buffer[100] = {0};
     // Инициализация вектора для строк (макс. 100 символов)
     esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         printf("Ошибка инициализации вектора\n");
         return;
     }
-    // Добавление стро��
+    // Добавление строк
     strcpy(buffer, "Привет");
     zh_vector_push_front(&vector, &buffer);
     strcpy(buffer, "Мир");
     zh_vector_push_back(&vector, &buffer);
-    size_t size;
+    uint16_t size = 0;
     ret = zh_vector_get_size(&vector, &size);
-    if (ret == ESP_OK) {
+    if (ret == ESP_OK)
+    {
         // Печать всех строк
-        for (int i = 0; i < size; i++) {
-            char str_value[100];
+        for (int i = 0; i < size; i++)
+        {
+            char str_value[100] = {0};
             esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, str_value);
-            if (err == ESP_OK) {
+            if (err == ESP_OK)
+            {
                 printf("Строка %d: %s\n", i, str_value);
-            } else {
+            }
+            else
+            {
                 printf("Ошибка получения строки %d: %s\n", i, esp_err_to_name(err));
             }
         }
@@ -470,7 +485,8 @@ void app_main(void)
     zh_vector_t *vector = NULL;
     // Инициализация вектора для целых чисел
     esp_err_t ret = zh_vector_init(&vector, sizeof(int));
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         printf("Ошибка инициализации вектора\n");
         return;
     }
@@ -485,24 +501,30 @@ void app_main(void)
     zh_vector_push_back(&vector, &val3);
     zh_vector_push_back(&vector, &val4);
     zh_vector_push_back(&vector, &val5);
-    uint16_t size;
+    uint16_t size = 0;
     ret = zh_vector_get_size(&vector, &size);
-    if (ret == ESP_OK) {
+    if (ret == ESP_OK)
+    {
         printf("Размер вектора перед удалением дубликатов: %zu\n", size);
     }
     // Удаление дубликатов
     zh_vector_remove_duplicates(&vector);
     ret = zh_vector_get_size(&vector, &size);
-    if (ret == ESP_OK) {
+    if (ret == ESP_OK)
+    {
         printf("Размер вектора после удаления дубликатов: %zu\n", size);
     }
     // Доступ к оставшимся элементам
-    for (int i = 0; i < size; i++) {
-        int item_value;
+    for (int i = 0; i < size; ++i)
+    {
+        int item_value = 0;
         esp_err_t err = zh_vector_get_item(&vector, (uint16_t)i, &item_value);
-        if (err == ESP_OK) {
+        if (err == ESP_OK)
+        {
             printf("Элемент %d: %d\n", i, item_value);
-        } else {
+        }
+        else
+        {
             printf("Ошибка получения элемента %d: %s\n", i, esp_err_to_name(err));
         }
     }
@@ -524,7 +546,8 @@ void app_main(void)
     zh_vector_t *vector = NULL;
     // Инициализация вектора для целых чисел
     esp_err_t ret = zh_vector_init(&vector, sizeof(int));
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         printf("Ошибка инициализации вектора\n");
         return;
     }
@@ -537,21 +560,27 @@ void app_main(void)
     zh_vector_push_back(&vector, &val3);
     // Поиск элемента
     int search_item = 20;
-    int16_t found_index = -1;
+    int32_t found_index = -1;
     ret = zh_vector_find_item(&vector, &search_item, &found_index);
-    if (ret == ESP_OK) {
-        printf("Элемент %d найден по индексу %d\n", search_item, found_index);
-    } else {
-        printf("Элемент %d не найден (index=%d)\n", search_item, found_index);
+    if (ret == ESP_OK)
+    {
+        printf("Элемент %d найден по индексу %ld\n", search_item, found_index);
+    }
+    else
+    {
+        printf("Элемент %d не найден (index=%ld)\n", search_item, found_index);
     }
     // Поиск несуществующего элемента
     search_item = 100;
     found_index = -1;
     ret = zh_vector_find_item(&vector, &search_item, &found_index);
-    if (ret == ESP_OK) {
-        printf("Элемент %d найден по индексу %d\n", search_item, found_index);
-    } else {
-        printf("Элемент %d не найден (index=%d)\n", search_item, found_index);
+    if (ret == ESP_OK)
+    {
+        printf("Элемент %d найден по индексу %ld\n", search_item, found_index);
+    }
+    else
+    {
+        printf("Элемент %d не найден (index=%ld)\n", search_item, found_index);
     }
     // Очистка
     zh_vector_free(&vector);
@@ -565,7 +594,8 @@ void app_main(void)
 ```c
 #include "zh_vector.h"
 
-typedef struct {
+typedef struct
+{
     int id;
     char name[32];
     float value;
@@ -577,7 +607,8 @@ void app_main(void)
     zh_vector_t *vector = NULL;
     // Инициализация вектора для структур
     esp_err_t ret = zh_vector_init(&vector, sizeof(my_struct_t));
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         printf("Ошибка инициализации вектора\n");
         return;
     }
@@ -590,29 +621,36 @@ void app_main(void)
     zh_vector_push_back(&vector, &item3);
     // Поиск структуры по значению поля (поиск по полю id)
     int search_id = 2;
-    int16_t found_index = -1;
+    int32_t found_index = -1;
     // Вычисление смещения поля 'id' внутри структуры
-    my_struct_t sample;
+    my_struct_t sample = {0};
     ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
-    if (ret == ESP_OK) {
-        printf("Структура с id=%d найдена по индексу %d\n", search_id, found_index);
+    if (ret == ESP_OK)
+    {
+        printf("Структура с id=%d найдена по индексу %ld\n", search_id, found_index);
         // Получение найденной структуры
-        my_struct_t found_item;
+        my_struct_t found_item = {0};
         ret = zh_vector_get_item(&vector, (uint16_t)found_index, &found_item);
-        if (ret == ESP_OK) {
+        if (ret == ESP_OK)
+        {
             printf("Найденный элемент: id=%d, name=%s, value=%.1f\n", found_item.id, found_item.name, found_item.value);
         }
-    } else {
-        printf("Структура с id=%d не найдена (index=%d)\n", search_id, found_index);
+    }
+    else
+    {
+        printf("Структура с id=%d не найдена (index=%ld)\n", search_id, found_index);
     }
     // Поиск несуществующего id
     search_id = 100;
     found_index = -1;
     ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
-    if (ret == ESP_OK) {
-        printf("Структура с id=%d найдена по индексу %d\n", search_id, found_index);
-    } else {
-        printf("Структура с id=%d не найдена (index=%d)\n", search_id, found_index);
+    if (ret == ESP_OK)
+    {
+        printf("Структура с id=%d найдена по индексу %ld\n", search_id, found_index);
+    }
+    else
+    {
+        printf("Структура с id=%d не найдена (index=%ld)\n", search_id, found_index);
     }
     // Очистка
     zh_vector_free(&vector);
@@ -696,4 +734,4 @@ void app_main(void)
 
 ---
 
-*Сгенерировано для zh_vector v2.4.0*
+*Сгенерировано для zh_vector v2.4.1*

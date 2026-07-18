@@ -242,7 +242,7 @@ esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *index)
+esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int32_t *index)
 {
     ZH_LOGI("Finding item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL && index != NULL, ESP_ERR_INVALID_ARG, NULL, "Finding item in vector failed. Invalid argument.");
@@ -252,7 +252,7 @@ esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *i
     {
         if (memcmp((*vector)->items[i], item, (*vector)->unit) == 0)
         {
-            *index = (int16_t)i;
+            *index = (int32_t)i;
             xSemaphoreGive((*vector)->mutex);
             ZH_LOGI("Finding item in vector success (found).");
             return ESP_OK;
@@ -263,7 +263,7 @@ esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *i
     return ESP_ERR_NOT_FOUND;
 }
 
-esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int16_t *index)
+esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int32_t *index)
 {
     ZH_LOGI("Finding field in structure begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && sample_struct != NULL && item != NULL && value != NULL && index != NULL && size > 0, ESP_ERR_INVALID_ARG, NULL, "Finding field in structure failed. Invalid argument.");
@@ -277,7 +277,7 @@ esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_
         const uint8_t *elem = (const uint8_t *)(*vector)->items[i];
         if (memcmp(elem + offset, value, size) == 0)
         {
-            *index = (int16_t)i;
+            *index = (int32_t)i;
             xSemaphoreGive((*vector)->mutex);
             ZH_LOGI("Finding field in structure success (found).");
             return ESP_OK;

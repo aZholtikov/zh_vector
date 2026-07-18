@@ -230,7 +230,7 @@ extern "C"
      * @return ESP_ERR_INVALID_ARG if any pointer argument is `NULL` or `*vector == NULL` (not initialized).
      * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired (rare, system error).
      */
-    esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int16_t *index);
+    esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int32_t *index);
 
     /**
      * @brief Searches for an item in a vector of structures by comparing a specific field.
@@ -263,7 +263,7 @@ extern "C"
      * @return ESP_ERR_INVALID_ARG if any pointer argument is NULL, `*vector` is NULL (not initialized), `size == 0`, `start >= vector size`, or the field extends beyond the element size.
      * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired.
      */
-    esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *field, size_t size, const void *item, uint16_t start, int16_t *index);
+    esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *field, size_t size, const void *item, uint16_t start, int32_t *index);
 
 #ifdef __cplusplus
 }

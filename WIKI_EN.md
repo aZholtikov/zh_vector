@@ -260,6 +260,43 @@ Deletes an element at a specific index and shifts all subsequent elements.
 
 ---
 
+### zh_vector_delete_back()
+
+Removes the last element from the vector.
+
+**Parameters:**
+
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+
+**Returns:**
+
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or NULL vector pointer or vector is empty)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+
+**Note:** The deleted item's memory is freed. If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
+
+---
+
+### zh_vector_delete_front()
+
+Removes the first element from the vector.
+
+**Parameters:**
+
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+
+**Returns:**
+
+- `ESP_OK` - Success
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or NULL vector pointer or vector is empty)
+- `ESP_ERR_NO_MEM` - Memory allocation failed (during reallocation)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+
+**Note:** The deleted item's memory is freed, and all subsequent elements are shifted left by one position. If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
+
+---
+
 ### zh_vector_find_item()
 
 Finds the first occurrence of an element in the vector.
@@ -734,4 +771,4 @@ limitations under the License.
 
 ---
 
-*Generated for zh_vector v2.4.1*
+*Generated for zh_vector v2.5.0*

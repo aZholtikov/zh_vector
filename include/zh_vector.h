@@ -192,6 +192,38 @@ extern "C"
     esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index);
 
     /**
+     * @brief Removes the last element from the vector.
+     *
+     * The element's memory is freed. If the size drops below half of the capacity,
+     * the capacity is reduced (same behaviour as zh_vector_delete_item).
+     *
+     * @note Thread-safe: internally locks/unlocks the mutex.
+     *
+     * @param[in,out] vector Double pointer to vector structure (must be initialized).
+     *
+     * @return ESP_OK on success.
+     * @return ESP_ERR_INVALID_ARG if `vector == NULL` or `*vector == NULL` (not initialized) or vector is empty.
+     * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired.
+     */
+    esp_err_t zh_vector_delete_back(zh_vector_t **vector);
+
+    /**
+     * @brief Removes the first element from the vector.
+     *
+     * The element's memory is freed, and all subsequent elements are shifted left by one.
+     * If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
+     *
+     * @note Thread-safe: internally locks/unlocks the mutex.
+     *
+     * @param[in,out] vector Double pointer to vector structure (must be initialized).
+     *
+     * @return ESP_OK on success.
+     * @return ESP_ERR_INVALID_ARG if `vector == NULL` or `*vector == NULL` (not initialized) or vector is empty.
+     * @return ESP_ERR_INVALID_STATE if the internal mutex cannot be acquired.
+     */
+    esp_err_t zh_vector_delete_front(zh_vector_t **vector);
+
+    /**
      * @brief Removes duplicate items from the vector, keeping only the first occurrence of each value.
      *
      * The function compares items byte-by-byte using `memcmp(..., unit)`. All elements that are equal

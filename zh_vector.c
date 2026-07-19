@@ -214,6 +214,30 @@ esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index) // -V2008
     return ESP_OK;
 }
 
+esp_err_t zh_vector_delete_back(zh_vector_t **vector) // -V2008
+{
+    ZH_LOGI("Deleting item in back begin.");
+    ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in back failed. Invalid argument.");
+    ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Deleting item in back failed. Failed to acquire mutex.");
+    ZH_ERROR_CHECK((*vector)->size > 0, ESP_ERR_INVALID_ARG, xSemaphoreGive((*vector)->mutex), "Deleting item in back failed. Vector is empty.");
+    ZH_ERROR_CHECK(_delete(*vector, (*vector)->size - 1) == ESP_OK, ESP_ERR_INVALID_STATE, xSemaphoreGive((*vector)->mutex), "Deleting item in back failed. Internal error.");
+    xSemaphoreGive((*vector)->mutex);
+    ZH_LOGI("Deleting item in back success.");
+    return ESP_OK;
+}
+
+esp_err_t zh_vector_delete_front(zh_vector_t **vector) // -V2008
+{
+    ZH_LOGI("Deleting item in front begin.");
+    ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in front failed. Invalid argument.");
+    ZH_ERROR_CHECK(xSemaphoreTake((*vector)->mutex, portMAX_DELAY) == pdTRUE, ESP_ERR_INVALID_STATE, NULL, "Deleting item in front failed. Failed to acquire mutex.");
+    ZH_ERROR_CHECK((*vector)->size > 0, ESP_ERR_INVALID_ARG, xSemaphoreGive((*vector)->mutex), "Deleting item in front failed. Vector is empty.");
+    ZH_ERROR_CHECK(_delete(*vector, 0) == ESP_OK, ESP_ERR_INVALID_STATE, xSemaphoreGive((*vector)->mutex), "Deleting item in front failed. Internal error.");
+    xSemaphoreGive((*vector)->mutex);
+    ZH_LOGI("Deleting item in front success.");
+    return ESP_OK;
+}
+
 esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector) // -V2008
 {
     ZH_LOGI("Removing duplicates from vector begin.");
@@ -263,7 +287,7 @@ esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int32_t *i
     return ESP_ERR_NOT_FOUND;
 }
 
-esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int32_t *index)
+esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int32_t *index) // -V2008
 {
     ZH_LOGI("Finding field in structure begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && sample_struct != NULL && item != NULL && value != NULL && index != NULL && size > 0, ESP_ERR_INVALID_ARG, NULL, "Finding field in structure failed. Invalid argument.");

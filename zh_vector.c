@@ -13,14 +13,6 @@ static const char *TAG = "zh_vector";
         return err;                                  \
     }
 
-#define ZH_ERROR_CHECK_VOID(cond, cleanup, msg, ...) \
-    if (!(cond))                                     \
-    {                                                \
-        ZH_LOGE(msg, ESP_FAIL, ##__VA_ARGS__);       \
-        cleanup;                                     \
-        return;                                      \
-    }
-
 /**
  * @brief Internal representation of a thread-safe, dynamically resizing vector of *copied* elements.
  *

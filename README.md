@@ -14,10 +14,13 @@
 
 ## Features
 
-1. Support of any data types.
-2. The maximum size of the vector is 65535 elements.
-3. Thread-safe implementation using FreeRTOS mutex.
-4. Automatic memory management with heap_caps functions.
+1. Support for any data types through void pointers.
+2. Dynamic capacity with automatic growth and shrinkage.
+3. Maximum capacity of 65,535 elements (16-bit index).
+4. Thread-safe implementation using FreeRTOS mutex.
+5. Automatic memory management with ESP-IDF heap_caps functions.
+6. Flexible insertion at front or back.
+7. Duplicate removal and item search capabilities.
 
 ## Using
 

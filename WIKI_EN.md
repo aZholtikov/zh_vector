@@ -216,7 +216,7 @@ Changes an element at a specific index.
 
 - `ESP_OK` - Success
 - `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, item pointer, or invalid index)
-- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex or item is NULL
 
 ---
 
@@ -271,7 +271,7 @@ Removes the last element from the vector.
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or NULL vector pointer or vector is empty)
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, NULL vector, or vector is empty)
 - `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
 **Note:** The deleted item's memory is freed. If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
@@ -289,8 +289,7 @@ Removes the first element from the vector.
 **Returns:**
 
 - `ESP_OK` - Success
-- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or NULL vector pointer or vector is empty)
-- `ESP_ERR_NO_MEM` - Memory allocation failed (during reallocation)
+- `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, NULL vector, or vector is empty)
 - `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
 **Note:** The deleted item's memory is freed, and all subsequent elements are shifted left by one position. If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
@@ -326,9 +325,9 @@ Finds the first occurrence of a value in a specific field within structures stor
 
 - `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
 - `sample_struct` - Pointer to a sample structure of the same type as stored in the vector. Must not be NULL.
-- `field` - Pointer to the field within the structure to search. Must be a valid member address within sample_struct.
+- `item` - Pointer to the field within the structure (e.g., `&sample.id`). Used to calculate the field offset within the structure. Must not be NULL.
 - `size` - Size (in bytes) of the field to compare. Must be > 0.
-- `item` - Pointer to the value to search for. Must not be NULL.
+- `value` - Pointer to the value to search for. Must not be NULL.
 - `start` - Starting index for the search (0-based). Must be < vector size.
 - `index` - Pointer to variable to store the found index. Will be set to -1 if value is not found. Must not be NULL.
 
@@ -339,7 +338,7 @@ Finds the first occurrence of a value in a specific field within structures stor
 - `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 - `ESP_ERR_NOT_FOUND` - Value not found (index set to -1)
 
-**Note:** This function calculates the offset of the field within the structure using sample_struct and item pointers, then searches for the specified value in that field across all vector elements starting from the given index. Uses memcmp for comparison. Useful for searching in vectors of structures without copying the entire structure.
+**Note:** This function calculates the offset of the field within the structure using `item` and `sample_struct` pointers (offset = `item - sample_struct`), then searches for the specified `value` in that field across all vector elements starting from the given index. Uses memcmp for comparison. Useful for searching in vectors of structures without copying the entire structure.
 
 ---
 

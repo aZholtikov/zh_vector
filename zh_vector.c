@@ -14,49 +14,67 @@ static const char *TAG = "zh_vector";
     }
 
 /**
- * @brief Internal representation of a thread-safe, dynamically resizing vector of *copied* elements.
+ * @brief Internal structure representing a dynamic vector.
  *
- * Stores pointers to heap-allocated *copies* of elements (not raw pointers).
- * Elements (stored in items[i]) are allocated via heap_caps_calloc(1, unit, ...) and freed via heap_caps_free.
- * Supports push front/back, change, delete and size queries.
- * Thread safety via FreeRTOS mutex.
+ * Contains a dynamically allocated array of item pointers, capacity tracking,
+ * element size, and a FreeRTOS mutex for thread-safe operations.
+ * Each element in the items array points to separately allocated memory
+ * containing the actual item data.
  *
- * @note Opaque type: only zh_vector_t (typedef struct _zh_vector_t* zh_vector_t) is exposed.
- * @note Elements are deep-copied — ownership of input item is NOT transferred.
- * @note All public functions lock the mutex internally — no external locking required.
- *       Internal functions _resize() and _calc_new_capacity() are not thread-safe and must be called
- *       only while the vector's mutex is held.
- * @note Internal function _resize() guarantees invariant: 0 ≤ size ≤ capacity.
- *       In particular, _resize(..., 0) always sets size = 0, capacity = 0, and frees all element buffers.
- * @note The capacity may exceed size after deletions (memory is not shrunk immediately),
- *       and is reduced only via _resize() on explicit request (e.g., during delete).
- *
- * @warning Do not access fields directly — always use public API.
- * @warning unit must match the actual element size — mismatch causes heap corruption.
- * @note capacity and size are limited to uint16_t (max 65535 elements), to save memory on embedded devices.
- * @note items is allocated via heap_caps_realloc as `void*`, but logically treated as `void**`.
- *       Each valid items[i] (0 ≤ i < size) points to a heap buffer of exactly `unit` bytes (allocated via heap_caps_calloc(1, unit, ...)).
- *       Only the first `unit` bytes are used for the copied item.
- * @warning Actual memory usage depends on allocator overhead and alignment.
- *          Rough estimate: `sizeof(zh_vector_t) + capacity * sizeof(void*) + size * (unit + item_overhead)`.
- *          Typical heap overhead per item: ~16 bytes (metadata + alignment).
- * @note Capacity reduction is triggered when `size < capacity / 2` (integer division). For example:
- *       - capacity=4, size=1 → capacity=1 (4/2=2 > 1)
- *       - capacity=2, size=1 → capacity stays 2 (2/2=1 not > 1)
- *       - capacity=1, size=0 → capacity=0 (handled separately: size==0 && capacity>0)
- * @note When size reaches 0, capacity is always set to 0, even without explicit resize request.
+ * @note All public operations acquire the mutex before accessing internal state.
+ * @warning The items array uses separate allocations for each element to support
+ *          variable-sized data structures stored within the vector.
  */
 struct _zh_vector_t
 {
-    void **items;            /*!< Array of element pointers. items[0..size-1] are valid and non-NULL. Initially NULL; allocated via heap_caps_realloc (as `void*`, cast to `void**`). When capacity > old_capacity, new slots (items[old_capacity..capacity-1]) are zeroed (NULL). */
-    uint16_t capacity;       /*!< Current allocated capacity (number of slots). Grows on insertion, shrinks on delete (see _resize). Limited to uint16_t (max 65535). */
-    uint16_t size;           /*!< Current number of valid elements (0 ≤ size ≤ capacity). Always kept in sync: _resize(..., 0) sets size = 0; after push operations size++; after delete size--. */
-    uint16_t unit;           /*!< Size (in bytes) of a single element. Set once in zh_vector_init() and immutable. Must match the actual element size — mismatch causes heap corruption. */
-    SemaphoreHandle_t mutex; /*!< FreeRTOS mutex. Created in zh_vector_init() and deleted in zh_vector_free(). All public functions acquire it before accessing/modifying the vector state. The mutex itself does not affect logical state (`size`, `capacity`). */
+    void **items;            /*!< Array of pointers to individual item allocations */
+    uint16_t capacity;       /*!< Current allocated capacity of the items array */
+    uint16_t size;           /*!< Current number of elements in the vector */
+    uint16_t unit;           /*!< Size of each element in bytes */
+    SemaphoreHandle_t mutex; /*!< FreeRTOS mutex for thread-safe operations */
 };
 
+/**
+ * @brief Resize the vector's internal items array.
+ *
+ * Allocates a new array with the specified capacity. When capacity is zero,
+ * all elements and the array itself are freed. When growing, new slots
+ * are initialized to NULL.
+ *
+ * @param vector Pointer to the vector to resize
+ * @param capacity New capacity for the items array
+ *
+ * @return ESP_OK on success
+ * @return ESP_ERR_INVALID_ARG if capacity is less than current size
+ * @return ESP_ERR_NO_MEM if memory reallocation fails
+ */
 static esp_err_t _resize(zh_vector_t *vector, uint16_t capacity);
+
+/**
+ * @brief Delete an element at the specified index and shift remaining elements.
+ *
+ * Frees the element's memory, shifts elements after the index one position left,
+ * and updates size. Automatically shrinks capacity if it exceeds twice the size
+ * or if the vector becomes empty.
+ *
+ * @param vector Pointer to the vector
+ * @param index Index of the element to delete
+ *
+ * @return ESP_OK on success
+ * @return ESP_ERR_INVALID_ARG if index is out of bounds
+ */
 static esp_err_t _delete(zh_vector_t *vector, uint16_t index);
+
+/**
+ * @brief Calculate the new capacity for the vector when growing.
+ *
+ * Returns initial capacity of 4 for empty vectors, UINT16_MAX if doubling
+ * would overflow, or double the current capacity otherwise.
+ *
+ * @param current Current capacity value
+ *
+ * @return New capacity value (4, UINT16_MAX, or current * 2)
+ */
 static inline uint16_t _calc_new_capacity(uint16_t current);
 
 esp_err_t zh_vector_init(zh_vector_t **vector, uint16_t unit) // -V2008

@@ -24,14 +24,14 @@ The component is designed specifically for ESP32 microcontrollers and uses ESP-I
 
 ## Features
 
-- **Type Agnostic**: Supports any data type (integers, floats, structs, custom types, etc.)
-- **Automatic Memory Management**: Automatic memory allocation and deallocation
-- **Dynamic Resizing**: Vector capacity grows and shrinks as needed
-- **Maximum Capacity**: Up to 65,535 elements (16-bit index limit)
-- **ESP-IDF Optimized**: Uses heap_caps functions for memory allocation with memory caps
-- **Error Handling**: Comprehensive error checking with detailed logging
-- **Thread-Safe**: Thread-safe (uses FreeRTOS mutex)
-- **Minimal Overhead**: Low memory and CPU overhead
+1. **Type Agnostic**: Supports any data type (integers, floats, structs, custom types, etc.)
+2. **Automatic Memory Management**: Automatic memory allocation and deallocation
+3. **Dynamic Resizing**: Vector capacity grows and shrinks as needed
+4. **Maximum Capacity**: Up to 65,535 elements (16-bit index limit)
+5. **ESP-IDF Optimized**: Uses heap_caps functions for memory allocation with memory caps
+6. **Error Handling**: Comprehensive error checking with detailed logging
+7. **Thread-Safe**: Thread-safe (uses FreeRTOS mutex)
+8. **Minimal Overhead**: Low memory and CPU overhead
 
 ---
 
@@ -70,7 +70,7 @@ The structure is declared as `typedef struct _zh_vector_t zh_vector_t;` and enca
 **Fields (internal):**
 
 | Field | Type | Description |
-|-------|------|-------------|
+| ------- | ------ | ------------- |
 | `items` | `void **` | Array of element pointers. Items[0..size-1] are valid. Allocated via heap_caps_calloc, reallocated via heap_caps_realloc. |
 | `capacity` | `uint16_t` | Current allocated capacity (number of slots). Grows on insertion - may exceed size after deletions. |
 | `size` | `uint16_t` | Current number of elements (0 ≤ size ≤ capacity). |
@@ -85,8 +85,8 @@ Initializes the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). If the vector pointer is NULL, memory will be allocated.
-- `unit` - Size of each element in bytes
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must point to NULL for creating a new vector. Must be NULL
+- `unit` - Size of each element in bytes. Must be > 0
 
 **Returns:**
 
@@ -114,7 +114,7 @@ Deinitializes the vector and frees all allocated memory. Sets the vector pointer
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
 
 **Returns:**
 
@@ -132,8 +132,8 @@ Gets the current allocated capacity of the vector (maximum number of elements wi
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `capacity` - Pointer to variable to store the capacity. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `capacity` - Pointer to variable to store the capacity. Must not be NULL
 
 **Returns:**
 
@@ -141,7 +141,7 @@ Gets the current allocated capacity of the vector (maximum number of elements wi
 - `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or capacity pointer)
 - `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
-**Note:** Capacity may be larger than the current size (e.g., after deletions), and is reduced lazily when size < capacity/2 (or when size becomes 0).
+**Note:** Capacity may be larger than the current size (e.g., after deletions). Capacity reduction occurs automatically when `capacity / 2 > size` or when size becomes 0.
 
 ---
 
@@ -151,8 +151,8 @@ Gets the current number of elements in the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `size` - Pointer to variable to store the size. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `size` - Pointer to variable to store the size. Must not be NULL
 
 **Returns:**
 
@@ -168,8 +168,8 @@ Adds an element to the beginning of the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `item` - Pointer to the element to add. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `item` - Pointer to the element to add. Must not be NULL
 
 **Returns:**
 
@@ -188,8 +188,8 @@ Adds an element to the end of the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `item` - Pointer to the element to add. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `item` - Pointer to the element to add. Must not be NULL
 
 **Returns:**
 
@@ -208,9 +208,9 @@ Changes an element at a specific index.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
 - `index` - Index of the element to change (0-based). Must be < vector size.
-- `item` - Pointer to the new element data. Must not be NULL.
+- `item` - Pointer to the new element data. Must not be NULL
 
 **Returns:**
 
@@ -226,9 +226,9 @@ Retrieves an element at a specific index by copying it into the user-provided bu
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `index` - Index of the element to get (0-based).
-- `item` - Pointer to a buffer of at least `unit` bytes where the element will be copied. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `index` - Index of the element to get (0-based)
+- `item` - Pointer to a buffer of at least `unit` bytes where the element will be copied. Must not be NULL
 
 **Returns:**
 
@@ -246,17 +246,16 @@ Deletes an element at a specific index and shifts all subsequent elements.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `index` - Index of the element to delete (0-based). Must be < vector size.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `index` - Index of the element to delete (0-based). Must be < vector size
 
 **Returns:**
 
 - `ESP_OK` - Success
 - `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer or invalid index)
-- `ESP_ERR_NO_MEM` - Memory allocation failed (during reallocation)
-- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
+- `ESP_ERR_INVALID_STATE` - Failed to acquire mutex or internal error
 
-**Note:** All elements after the deleted index are shifted left by one position. The deleted item's memory is freed.
+**Note:** All elements after the deleted index are shifted left by one position. The deleted item's memory is freed. Capacity is automatically reduced when `capacity / 2 > size` or when size becomes 0.
 
 ---
 
@@ -266,7 +265,7 @@ Removes the last element from the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
 
 **Returns:**
 
@@ -274,7 +273,7 @@ Removes the last element from the vector.
 - `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, NULL vector, or vector is empty)
 - `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
-**Note:** The deleted item's memory is freed. If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
+**Note:** The deleted item's memory is freed. Capacity is automatically reduced when `capacity / 2 > size` or when size becomes 0 (same behaviour as zh_vector_delete_item).
 
 ---
 
@@ -284,7 +283,7 @@ Removes the first element from the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
 
 **Returns:**
 
@@ -292,7 +291,7 @@ Removes the first element from the vector.
 - `ESP_ERR_INVALID_ARG` - Invalid argument (NULL vector pointer, NULL vector, or vector is empty)
 - `ESP_ERR_INVALID_STATE` - Failed to acquire mutex (rare system error)
 
-**Note:** The deleted item's memory is freed, and all subsequent elements are shifted left by one position. If the size drops below half of the capacity, the capacity is reduced (same behaviour as zh_vector_delete_item).
+**Note:** The deleted item's memory is freed, and all subsequent elements are shifted left by one position. Capacity is automatically reduced when `capacity / 2 > size` or when size becomes 0 (same behaviour as zh_vector_delete_item).
 
 ---
 
@@ -302,9 +301,9 @@ Finds the first occurrence of an element in the vector.
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `item` - Pointer to the element to find. Must not be NULL.
-- `index` - Pointer to variable to store the found index. Will be set to -1 if element is not found. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `item` - Pointer to the element to find. Must not be NULL
+- `index` - Pointer to variable of type `int32_t` to store the found index. Will be set to -1 if element is not found. Must not be NULL
 
 **Returns:**
 
@@ -323,13 +322,13 @@ Finds the first occurrence of a value in a specific field within structures stor
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
-- `sample_struct` - Pointer to a sample structure of the same type as stored in the vector. Must not be NULL.
-- `item` - Pointer to the field within the structure (e.g., `&sample.id`). Used to calculate the field offset within the structure. Must not be NULL.
-- `size` - Size (in bytes) of the field to compare. Must be > 0.
-- `value` - Pointer to the value to search for. Must not be NULL.
-- `start` - Starting index for the search (0-based). Must be < vector size.
-- `index` - Pointer to variable to store the found index. Will be set to -1 if value is not found. Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
+- `sample_struct` - Pointer to a sample structure of the same type as stored in the vector. Must not be NULL
+- `item` - Pointer to the field within the structure (e.g., `&sample.id`). Used to calculate the field offset within the structure. Must not be NULL
+- `size` - Size (in bytes) of the field to compare. Must be > 0
+- `value` - Pointer to the value to search for. Must not be NULL
+- `start` - Starting index for the search (0-based). Must be < vector size
+- `index` - Pointer to variable of type `int32_t` to store the found index. Will be set to -1 if value is not found. Must not be NULL
 
 **Returns:**
 
@@ -348,7 +347,7 @@ Removes duplicate elements from the vector, keeping only the first occurrence of
 
 **Parameters:**
 
-- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL.
+- `vector` - Pointer to pointer to vector structure (`zh_vector_t **`). Must not be NULL
 
 **Returns:**
 
@@ -389,7 +388,7 @@ void app_main(void)
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK)
     {
-        printf("Vector size: %zu\n", size);
+        printf("Vector size: %u\n", size);
     }
     // Access elements
     for (int i = 0; i < size; i++)
@@ -469,19 +468,25 @@ void app_main(void)
 {
     esp_log_level_set("zh_vector", ESP_LOG_ERROR);
     zh_vector_t *vector = NULL;
-    char buffer[100] = {0};
     // Initialize vector for strings (100 char max)
-    esp_err_t ret = zh_vector_init(&vector, sizeof(buffer));
+    esp_err_t ret = zh_vector_init(&vector, 100);
     if (ret != ESP_OK)
     {
         printf("Vector initialization error\n");
         return;
     }
-    // Add strings
-    strcpy(buffer, "Hello");
-    zh_vector_push_front(&vector, &buffer);
-    strcpy(buffer, "World");
-    zh_vector_push_back(&vector, &buffer);
+    // Add strings (each string allocated separately)
+    char *str1 = malloc(100);
+    char *str2 = malloc(100);
+    if (str1 && str2)
+    {
+        strcpy(str1, "Hello");
+        strcpy(str2, "World");
+        zh_vector_push_back(&vector, str1);
+        zh_vector_push_back(&vector, str2);
+        free(str1);
+        free(str2);
+    }
     uint16_t size = 0;
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK)
@@ -541,14 +546,14 @@ void app_main(void)
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK)
     {
-        printf("Vector size before removing duplicates: %zu\n", size);
+        printf("Vector size before removing duplicates: %u\n", size);
     }
     // Remove duplicates
     zh_vector_remove_duplicates(&vector);
     ret = zh_vector_get_size(&vector, &size);
     if (ret == ESP_OK)
     {
-        printf("Vector size after removing duplicates: %zu\n", size);
+        printf("Vector size after removing duplicates: %u\n", size);
     }
     // Access remaining elements
     for (int i = 0; i < size; ++i)
@@ -600,11 +605,11 @@ void app_main(void)
     ret = zh_vector_find_item(&vector, &search_item, &found_index);
     if (ret == ESP_OK)
     {
-        printf("Element %d found at index %ld\n", search_item, found_index);
+        printf("Element %d found at index %d\n", search_item, (int)found_index);
     }
     else
     {
-        printf("Element %d not found (index=%ld)\n", search_item, found_index);
+        printf("Element %d not found (index=%d)\n", search_item, (int)found_index);
     }
     // Find non-existing element
     search_item = 100;
@@ -612,11 +617,11 @@ void app_main(void)
     ret = zh_vector_find_item(&vector, &search_item, &found_index);
     if (ret == ESP_OK)
     {
-        printf("Element %d found at index %ld\n", search_item, found_index);
+        printf("Element %d found at index %d\n", search_item, (int)found_index);
     }
     else
     {
-        printf("Element %d not found (index=%ld)\n", search_item, found_index);
+        printf("Element %d not found (index=%d)\n", search_item, (int)found_index);
     }
     // Cleanup
     zh_vector_free(&vector);
@@ -663,7 +668,7 @@ void app_main(void)
     ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
     if (ret == ESP_OK)
     {
-        printf("Struct with id=%d found at index %ld\n", search_id, found_index);
+        printf("Struct with id=%d found at index %d\n", search_id, (int)found_index);
         // Get the found struct
         my_struct_t found_item = {0};
         ret = zh_vector_get_item(&vector, (uint16_t)found_index, &found_item);
@@ -674,7 +679,7 @@ void app_main(void)
     }
     else
     {
-        printf("Struct with id=%d not found (index=%ld)\n", search_id, found_index);
+        printf("Struct with id=%d not found (index=%d)\n", search_id, (int)found_index);
     }
     // Find non-existing id
     search_id = 100;
@@ -682,11 +687,11 @@ void app_main(void)
     ret = zh_vector_find_item_in_field(&vector, &sample, &sample.id, sizeof(sample.id), &search_id, 0, &found_index);
     if (ret == ESP_OK)
     {
-        printf("Struct with id=%d found at index %ld\n", search_id, found_index);
+        printf("Struct with id=%d found at index %d\n", search_id, (int)found_index);
     }
     else
     {
-        printf("Struct with id=%d not found (index=%ld)\n", search_id, found_index);
+        printf("Struct with id=%d not found (index=%d)\n", search_id, (int)found_index);
     }
     // Cleanup
     zh_vector_free(&vector);
@@ -698,7 +703,7 @@ void app_main(void)
 ## Technical Specifications
 
 | Parameter | Value |
-|-----------|-------|
+| ----------- | ------- |
 | **Maximum Capacity** | 65,535 elements |
 | **Index Type** | uint16_t (16-bit) |
 | **Memory Management** | heap_caps_calloc, heap_caps_realloc, heap_caps_free |
@@ -713,12 +718,12 @@ void app_main(void)
 ## Error Codes
 
 | Error Code | Description |
-|------------|-------------|
+| ------------ | ------------- |
 | `ESP_OK` | Operation successful |
-| `ESP_ERR_INVALID_ARG` | Invalid argument (NULL pointer or zero size) |
-| `ESP_ERR_INVALID_STATE` | Failed to acquire mutex (rare system error) |
+| `ESP_ERR_INVALID_ARG` | Invalid argument (NULL pointer, zero size, or invalid index) |
+| `ESP_ERR_INVALID_STATE` | Failed to acquire mutex or internal error (e.g., item is NULL) |
 | `ESP_ERR_NO_MEM` | Memory allocation failed (out of memory) |
-| `ESP_ERR_NOT_FOUND` | Element not found (for zh_vector_find_item) |
+| `ESP_ERR_NOT_FOUND` | Element not found (for zh_vector_find_item and zh_vector_find_item_in_field) |
 
 ---
 

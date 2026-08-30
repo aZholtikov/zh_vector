@@ -140,7 +140,7 @@ extern "C"
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL or index is out of bounds
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails or item is NULL
+     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails or element at index is NULL
      */
     esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void *item);
 
@@ -154,6 +154,10 @@ extern "C"
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL or index is out of bounds
      * @return ESP_ERR_INVALID_STATE if mutex acquisition fails or item is NULL
+     *
+     * @note The element at the specified index must exist and be non-NULL.
+     *       This is guaranteed if the vector was properly initialized and no
+     *       internal corruption occurred.
      */
     esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item);
 

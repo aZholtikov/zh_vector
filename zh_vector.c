@@ -77,7 +77,7 @@ static esp_err_t _delete(zh_vector_t *vector, uint16_t index);
  */
 static inline uint16_t _calc_new_capacity(uint16_t current);
 
-esp_err_t zh_vector_init(zh_vector_t **vector, uint16_t unit) // -V2008
+esp_err_t zh_vector_init(zh_vector_t **vector, uint16_t unit)
 {
     ZH_LOGI("Vector initialization begin.");
     ZH_ERROR_CHECK(vector != NULL && unit > 0, ESP_ERR_INVALID_ARG, NULL, "Vector initialization failed. Invalid argument.");
@@ -141,7 +141,7 @@ esp_err_t zh_vector_get_capacity(zh_vector_t **vector, uint16_t *capacity)
     return ESP_OK;
 }
 
-esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item) // -V2008
+esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item)
 {
     ZH_LOGI("Adding item to beginning of vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to beginning of vector failed. Invalid argument.");
@@ -165,7 +165,7 @@ esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item) // -V2008
+esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item)
 {
     ZH_LOGI("Adding item to vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Adding item to vector failed. Invalid argument.");
@@ -186,7 +186,7 @@ esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void *item) // -V2008
+esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void *item)
 {
     ZH_LOGI("Changing item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Changing item in vector failed. Invalid argument.");
@@ -199,7 +199,7 @@ esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void
     return ESP_OK;
 }
 
-esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item) // -V2008
+esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item)
 {
     ZH_LOGI("Getting item from vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && item != NULL, ESP_ERR_INVALID_ARG, NULL, "Getting item from vector failed. Invalid argument.");
@@ -212,7 +212,7 @@ esp_err_t zh_vector_get_item(zh_vector_t **vector, uint16_t index, void *item) /
     return ESP_OK;
 }
 
-esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index) // -V2008
+esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index)
 {
     ZH_LOGI("Deleting item in vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in vector failed. Invalid argument.");
@@ -224,7 +224,7 @@ esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_delete_back(zh_vector_t **vector) // -V2008
+esp_err_t zh_vector_delete_back(zh_vector_t **vector)
 {
     ZH_LOGI("Deleting item in back begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in back failed. Invalid argument.");
@@ -236,7 +236,7 @@ esp_err_t zh_vector_delete_back(zh_vector_t **vector) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_delete_front(zh_vector_t **vector) // -V2008
+esp_err_t zh_vector_delete_front(zh_vector_t **vector)
 {
     ZH_LOGI("Deleting item in front begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Deleting item in front failed. Invalid argument.");
@@ -248,7 +248,7 @@ esp_err_t zh_vector_delete_front(zh_vector_t **vector) // -V2008
     return ESP_OK;
 }
 
-esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector) // -V2008
+esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector)
 {
     ZH_LOGI("Removing duplicates from vector begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL, ESP_ERR_INVALID_ARG, NULL, "Removing duplicates from vector failed. Invalid argument.");
@@ -297,7 +297,7 @@ esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int32_t *i
     return ESP_ERR_NOT_FOUND;
 }
 
-esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int32_t *index) // -V2008
+esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int32_t *index)
 {
     ZH_LOGI("Finding field in structure begin.");
     ZH_ERROR_CHECK(vector != NULL && *vector != NULL && sample_struct != NULL && item != NULL && value != NULL && index != NULL && size > 0, ESP_ERR_INVALID_ARG, NULL, "Finding field in structure failed. Invalid argument.");

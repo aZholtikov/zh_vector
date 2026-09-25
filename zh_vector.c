@@ -152,12 +152,13 @@ esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item)
         uint16_t new_capacity = _calc_new_capacity((*vector)->capacity);
         ZH_ERROR_CHECK(_resize(*vector, new_capacity) == ESP_OK, ESP_ERR_NO_MEM, xSemaphoreGive((*vector)->mutex), "Adding item to beginning of vector failed. Memory reallocation failed.");
     }
+    void *new_item = heap_caps_calloc(1, (*vector)->unit, MALLOC_CAP_8BIT);
+    ZH_ERROR_CHECK(new_item != NULL, ESP_ERR_NO_MEM, xSemaphoreGive((*vector)->mutex), "Adding item to beginning of vector failed. Element allocation failed.");
     for (uint16_t i = (*vector)->size; i > 0; --i)
     {
         (*vector)->items[i] = (*vector)->items[i - 1];
     }
-    (*vector)->items[0] = heap_caps_calloc(1, (*vector)->unit, MALLOC_CAP_8BIT);
-    ZH_ERROR_CHECK((*vector)->items[0] != NULL, ESP_ERR_NO_MEM, xSemaphoreGive((*vector)->mutex), "Adding item to beginning of vector failed. Element allocation failed.");
+    (*vector)->items[0] = new_item;
     memcpy((*vector)->items[0], item, (*vector)->unit);
     (*vector)->size++;
     xSemaphoreGive((*vector)->mutex);

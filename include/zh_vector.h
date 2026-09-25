@@ -74,7 +74,7 @@ extern "C"
     /**
      * @brief Get the current number of elements in the vector.
      *
-     * @param[in] vector Pointer to the vector (must not be NULL)
+     * @param[in] vector Pointer to the vector handle (must not be NULL)
      * @param[out] size Pointer to receive the current size (must not be NULL)
      *
      * @return ESP_OK on success
@@ -86,7 +86,7 @@ extern "C"
     /**
      * @brief Get the current capacity of the vector.
      *
-     * @param[in] vector Pointer to the vector (must not be NULL)
+     * @param[in] vector Pointer to the vector handle (must not be NULL)
      * @param[out] capacity Pointer to receive the current capacity (must not be NULL)
      *
      * @return ESP_OK on success
@@ -102,7 +102,7 @@ extern "C"
      * a copy of the provided item at index 0. The vector capacity
      * will be increased if necessary.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      * @param[in] item Pointer to the item to insert (must not be NULL)
      *
      * @return ESP_OK on success
@@ -118,7 +118,7 @@ extern "C"
      * Creates a copy of the provided item and adds it to the end of the vector.
      * The vector capacity will be increased if necessary.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      * @param[in] item Pointer to the item to append (must not be NULL)
      *
      * @return ESP_OK on success
@@ -134,7 +134,7 @@ extern "C"
      * Copies the provided item into the existing element at the given index.
      * The element must already exist and be non-NULL.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      * @param[in] index Index of the element to replace (must be < size)
      * @param[in] item Pointer to the new item data (must not be NULL)
      *
@@ -147,7 +147,7 @@ extern "C"
     /**
      * @brief Retrieve a copy of the element at the specified index.
      *
-     * @param[in] vector Pointer to the vector (must not be NULL)
+     * @param[in] vector Pointer to the vector handle (must not be NULL)
      * @param[in] index Index of the element to retrieve (must be < size)
      * @param[out] item Pointer to buffer where the element will be copied (must not be NULL)
      *
@@ -167,7 +167,7 @@ extern "C"
      * Frees the element's memory, shifts remaining elements, and updates size.
      * Capacity may be reduced if it exceeds twice the current size.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      * @param[in] index Index of the element to delete (must be < size)
      *
      * @return ESP_OK on success
@@ -182,7 +182,7 @@ extern "C"
      * Frees the last element's memory and updates size.
      * Capacity may be reduced if it exceeds twice the current size.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL or vector is empty
@@ -196,7 +196,7 @@ extern "C"
      * Frees the first element's memory, shifts remaining elements, and updates size.
      * Capacity may be reduced if it exceeds twice the current size.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL or vector is empty
@@ -210,7 +210,7 @@ extern "C"
      * Compares elements using memcmp and removes subsequent duplicates.
      * Elements are compared based on their raw binary content.
      *
-     * @param[in,out] vector Pointer to the vector (must not be NULL)
+     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL
@@ -224,7 +224,7 @@ extern "C"
      * Searches for an element whose binary content matches the provided item
      * using memcmp. Returns the index of the first match or -1 if not found.
      *
-     * @param[in] vector Pointer to the vector (must not be NULL)
+     * @param[in] vector Pointer to the vector handle (must not be NULL)
      * @param[in] item Pointer to the item to search for (must not be NULL)
      * @param[out] index Pointer to receive the found index (-1 if not found) (must not be NULL)
      *
@@ -242,7 +242,7 @@ extern "C"
      * and size) matches the provided value. Comparison starts from the
      * specified index.
      *
-     * @param[in] vector Pointer to the vector containing structures (must not be NULL)
+     * @param[in] vector Pointer to the vector handle containing structures (must not be NULL)
      * @param[in] sample_struct Pointer to a sample structure (used for field offset calculation) (must not be NULL)
      * @param[in] item Pointer to the field within the structure (e.g., `&sample.id`). Used to calculate the field offset (must not be NULL)
      * @param[in] size Size of the field in bytes (must be > 0)

@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "stdint.h"
+#include "stddef.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
@@ -62,36 +64,38 @@ extern "C"
      *
      * Frees all allocated elements, the items array, the mutex, and the vector
      * structure itself. The vector pointer is set to NULL after deletion.
+     * The vector is marked as deleting and the function waits until all
+     * operations in progress finish (reference counter drops to zero).
      *
-     * @param[in,out] vector Pointer to the vector handle to be freed (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle to be freed (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted, mutex acquisition fails or deletion is already in progress
      */
     esp_err_t zh_vector_free(zh_vector_t **vector);
 
     /**
      * @brief Get the current number of elements in the vector.
      *
-     * @param[in] vector Pointer to the vector handle (must not be NULL)
+     * @param[in] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[out] size Pointer to receive the current size (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      */
     esp_err_t zh_vector_get_size(zh_vector_t **vector, uint16_t *size);
 
     /**
      * @brief Get the current capacity of the vector.
      *
-     * @param[in] vector Pointer to the vector handle (must not be NULL)
+     * @param[in] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[out] capacity Pointer to receive the current capacity (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      */
     esp_err_t zh_vector_get_capacity(zh_vector_t **vector, uint16_t *capacity);
 
@@ -102,12 +106,12 @@ extern "C"
      * a copy of the provided item at index 0. The vector capacity
      * will be increased if necessary.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[in] item Pointer to the item to insert (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      * @return ESP_ERR_NO_MEM if vector is full or element allocation fails
      */
     esp_err_t zh_vector_push_front(zh_vector_t **vector, const void *item);
@@ -118,12 +122,12 @@ extern "C"
      * Creates a copy of the provided item and adds it to the end of the vector.
      * The vector capacity will be increased if necessary.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[in] item Pointer to the item to append (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      * @return ESP_ERR_NO_MEM if vector is full or element allocation fails
      */
     esp_err_t zh_vector_push_back(zh_vector_t **vector, const void *item);
@@ -134,26 +138,26 @@ extern "C"
      * Copies the provided item into the existing element at the given index.
      * The element must already exist and be non-NULL.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[in] index Index of the element to replace (must be < size)
      * @param[in] item Pointer to the new item data (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL or index is out of bounds
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails or element at index is NULL
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted, mutex acquisition fails or the element at index is NULL
      */
     esp_err_t zh_vector_change_item(zh_vector_t **vector, uint16_t index, const void *item);
 
     /**
      * @brief Retrieve a copy of the element at the specified index.
      *
-     * @param[in] vector Pointer to the vector handle (must not be NULL)
+     * @param[in] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[in] index Index of the element to retrieve (must be < size)
      * @param[out] item Pointer to buffer where the element will be copied (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL or index is out of bounds
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails or item is NULL
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      *
      * @note The element at the specified index must exist and be non-NULL.
      *       This is guaranteed if the vector was properly initialized and no
@@ -167,12 +171,12 @@ extern "C"
      * Frees the element's memory, shifts remaining elements, and updates size.
      * Capacity may be reduced if it exceeds twice the current size.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[in] index Index of the element to delete (must be < size)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL or index is out of bounds
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      */
     esp_err_t zh_vector_delete_item(zh_vector_t **vector, uint16_t index);
 
@@ -182,11 +186,11 @@ extern "C"
      * Frees the last element's memory and updates size.
      * Capacity may be reduced if it exceeds twice the current size.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL or vector is empty
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      */
     esp_err_t zh_vector_delete_back(zh_vector_t **vector);
 
@@ -196,11 +200,11 @@ extern "C"
      * Frees the first element's memory, shifts remaining elements, and updates size.
      * Capacity may be reduced if it exceeds twice the current size.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL or vector is empty
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      */
     esp_err_t zh_vector_delete_front(zh_vector_t **vector);
 
@@ -210,11 +214,11 @@ extern "C"
      * Compares elements using memcmp and removes subsequent duplicates.
      * Elements are compared based on their raw binary content.
      *
-     * @param[in,out] vector Pointer to the vector handle (must not be NULL)
+     * @param[in,out] vector Pointer to the pointer to the vector handle (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if vector or *vector is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      */
     esp_err_t zh_vector_remove_duplicates(zh_vector_t **vector);
 
@@ -224,13 +228,13 @@ extern "C"
      * Searches for an element whose binary content matches the provided item
      * using memcmp. Returns the index of the first match or -1 if not found.
      *
-     * @param[in] vector Pointer to the vector handle (must not be NULL)
+     * @param[in] vector Pointer to the pointer to the vector handle (must not be NULL)
      * @param[in] item Pointer to the item to search for (must not be NULL)
      * @param[out] index Pointer to receive the found index (-1 if not found) (must not be NULL)
      *
      * @return ESP_OK on success
      * @return ESP_ERR_INVALID_ARG if any parameter is NULL
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      * @return ESP_ERR_NOT_FOUND if item is not found in the vector
      */
     esp_err_t zh_vector_find_item(zh_vector_t **vector, const void *item, int32_t *index);
@@ -239,23 +243,26 @@ extern "C"
      * @brief Find an element by comparing a specific field within structures.
      *
      * Searches for an element where a specified field (identified by offset
-     * and size) matches the provided value. Comparison starts from the
-     * specified index.
+     * and size) matches the provided value. The offset is derived from the
+     * address difference between `item` and `sample_struct` and must lie
+     * within the element together with the field size. Comparison starts
+     * from the specified index.
      *
-     * @param[in] vector Pointer to the vector handle containing structures (must not be NULL)
+     * @param[in] vector Pointer to the pointer to the vector handle containing structures (must not be NULL)
      * @param[in] sample_struct Pointer to a sample structure (used for field offset calculation) (must not be NULL)
      * @param[in] item Pointer to the field within the structure (e.g., `&sample.id`). Used to calculate the field offset (must not be NULL)
-     * @param[in] size Size of the field in bytes (must be > 0)
+     * @param[in] size Size of the field in bytes (must be > 0 and the field must fit within the element)
      * @param[in] value Pointer to the value to match against the field (must not be NULL)
      * @param[in] start Index to begin searching from (must be < size)
      * @param[out] index Pointer to receive the found index (-1 if not found) (must not be NULL)
      *
      * @return ESP_OK on success
-     * @return ESP_ERR_INVALID_ARG if any parameter is invalid
-     * @return ESP_ERR_INVALID_STATE if mutex acquisition fails
+     * @return ESP_ERR_INVALID_ARG if any parameter is invalid, the field offset with size exceeds the element size,
+     *         or *index is NULL when size is zero
+     * @return ESP_ERR_INVALID_STATE if the vector is being deleted or mutex acquisition fails
      * @return ESP_ERR_NOT_FOUND if no matching element is found
      */
-    esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, size_t size, const void *value, uint16_t start, int32_t *index);
+    esp_err_t zh_vector_find_item_in_field(zh_vector_t **vector, const void *sample_struct, const void *item, uint16_t size, const void *value, uint16_t start, int32_t *index);
 
 #ifdef __cplusplus
 }
